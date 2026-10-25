@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "resort_empire.sln"
+    "dotnet.defaultSolution": "ResortEmpire.slnx"
 }
