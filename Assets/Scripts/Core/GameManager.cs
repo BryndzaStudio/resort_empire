@@ -35,7 +35,9 @@ public class GameManager : MonoBehaviour
         Debug.Log(
             $"Game loaded: Coins={CurrentState.coins}, " +
             $"Energy={CurrentState.energy}, " +
-            $"ResortValue={CurrentState.resortValue}"
+            $"ResortValue={CurrentState.resortValue}, " +
+            $"Buildings={CurrentState.buildings.Count}, " +
+            $"Workers={CurrentState.workerCount}"
         );
     }
 

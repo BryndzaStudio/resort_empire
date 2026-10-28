@@ -22,7 +22,21 @@ public static class SaveSystem
         }
 
         string json = File.ReadAllText(SavePath);
-        return JsonUtility.FromJson<GameState>(json);
+        return Deserialize(json);
+    }
+
+    public static GameState Deserialize(string json)
+    {
+        if (string.IsNullOrEmpty(json) || json.Trim() == "null")
+        {
+            return null;
+        }
+
+        // Missing fields in older saves keep the starting content. Existing
+        // values, including zero workers or an empty building list, overwrite it.
+        var state = new GameState(0, 0, 0);
+        JsonUtility.FromJsonOverwrite(json, state);
+        return state;
     }
 
     public static bool HasSave()

@@ -30,8 +30,18 @@ public class GameStateTester : MonoBehaviour
             Debug.Log(
                 $"Coins: {state.coins}, " +
                 $"Energy: {state.energy}, " +
-                $"Resort Value: {state.resortValue}"
+                $"Resort Value: {state.resortValue}, " +
+                $"Workers: {state.workerCount}"
             );
+
+            foreach (var building in state.buildings)
+            {
+                Debug.Log(
+                    $"Building: {building.type}, " +
+                    $"Level: {building.level}, " +
+                    $"Active: {building.isActive}"
+                );
+            }
         }
     }
 }
