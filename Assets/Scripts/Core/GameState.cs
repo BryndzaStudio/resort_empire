@@ -10,36 +10,24 @@ public class GameState
     public int coins;
     public int energy;
     public int resortValue;
-    public List<BuildingState> buildings = new List<BuildingState>();
+    public List<BuildingState> buildings;
+    public int workerCount;
 
     public GameState(int startingCoins, int startingEnergy, int startingResortValue)
     {
         coins = startingCoins;
         energy = startingEnergy;
         resortValue = startingResortValue;
-    }
 
-    public BuildingState GetBuilding(string buildingId)
-    {
-        return buildings.Find(b => b.buildingId == buildingId);
-    }
-
-    // Adds any missing starting buildings at level 1. Existing buildings keep their level.
-    public void EnsureStartingBuildings(IEnumerable<string> startingBuildingIds)
-    {
-        if (buildings == null)
+        // BRYN-11: the three starting buildings are active and at level 1.
+        buildings = new List<BuildingState>
         {
-            buildings = new List<BuildingState>();
-        }
+            new BuildingState(BuildingType.Restaurant),
+            new BuildingState(BuildingType.BeachBar),
+            new BuildingState(BuildingType.Reception)
+        };
 
-        foreach (string buildingId in startingBuildingIds)
-        {
-            if (string.IsNullOrEmpty(buildingId) || GetBuilding(buildingId) != null)
-            {
-                continue;
-            }
-
-            buildings.Add(new BuildingState(buildingId, StartingBuildingLevel));
-        }
+        // BRYN-12: two workers are available when a new game starts.
+        workerCount = 2;
     }
 }
