@@ -32,6 +32,11 @@ public class GameStateTester : MonoBehaviour
                 $"Energy: {state.energy}, " +
                 $"Resort Value: {state.resortValue}"
             );
+
+            foreach (var building in state.buildings)
+            {
+                Debug.Log($"Building: {building.buildingId}, Level: {building.level}");
+            }
         }
     }
 }
