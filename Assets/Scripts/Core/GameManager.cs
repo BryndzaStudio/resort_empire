@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int startingEnergy = 100;
     [SerializeField] private int startingResortValue = 5000;
 
+    [Header("Starting Buildings")]
+    [SerializeField] private string[] startingBuildingIds = { "reception", "hotel", "restaurant" };
+
     public GameState CurrentState { get; private set; }
 
     private void Awake()
@@ -31,11 +34,17 @@ public class GameManager : MonoBehaviour
         {
             InitializeNewGame();
         }
+        else
+        {
+            // Older saves have no buildings yet.
+            CurrentState.EnsureStartingBuildings(startingBuildingIds);
+        }
 
         Debug.Log(
             $"Game loaded: Coins={CurrentState.coins}, " +
             $"Energy={CurrentState.energy}, " +
-            $"ResortValue={CurrentState.resortValue}"
+            $"ResortValue={CurrentState.resortValue}, " +
+            $"Buildings={CurrentState.buildings.Count}"
         );
     }
 
@@ -46,6 +55,7 @@ public class GameManager : MonoBehaviour
             startingEnergy,
             startingResortValue
         );
+        CurrentState.EnsureStartingBuildings(startingBuildingIds);
 
         SaveGame();
         Debug.Log("New game initialized.");
