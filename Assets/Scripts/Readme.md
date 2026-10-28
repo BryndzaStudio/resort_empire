@@ -5,6 +5,7 @@
 - `GameState.cs` — Stores coins, energy, resort value, buildings and worker count.
 - `BuildingState.cs` — Stores each building's type, level and active flag.
 - `GameManager.cs` — Initializes a new game or loads an existing save.
+- `GameConfig.cs` — Configures starting coins and energy through a ScriptableObject asset (BRYN-9).
 - `SaveSystem.cs` — Saves and loads game data using JSON.
 - `GameStateTester.cs` — Temporary script for testing game-state functionality.
 
@@ -23,7 +24,7 @@ Click inside the Game view before using the controls.
 
 ## Saving and loading
 
-- On first launch, a new game state is initialized using values configured in the `GameManager` Inspector.
+- On first launch, coins and energy come from the `GameConfig` assigned to `GameManager`; resort value comes from the `GameManager` Inspector. If no config is assigned, coins and energy default to 1000 and 100 with a Console warning.
 - The game state is saved to `resort_save.json` in `Application.persistentDataPath`.
 - When the game starts again, the existing save is loaded automatically.
 - The current implementation also **attempts to save when the application is paused or closed**.

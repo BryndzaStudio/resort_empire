@@ -5,6 +5,8 @@ using System.Collections.Generic;
 [Serializable]
 public class GameState
 {
+    public const int StartingBuildingLevel = 1;
+
     public int coins;
     public int energy;
     public int resortValue;

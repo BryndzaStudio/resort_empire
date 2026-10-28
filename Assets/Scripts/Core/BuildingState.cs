@@ -18,7 +18,7 @@ public class BuildingState
     public BuildingState(BuildingType type)
     {
         this.type = type;
-        level = 1;
+        level = GameState.StartingBuildingLevel;
         isActive = true;
     }
 }
