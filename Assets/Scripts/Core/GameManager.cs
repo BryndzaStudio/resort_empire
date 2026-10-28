@@ -5,10 +5,15 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    [Header("Config")]
+    [SerializeField] private GameConfig config;
+
     [Header("Starting Values")]
-    [SerializeField] private int startingCoins = 1000;
-    [SerializeField] private int startingEnergy = 100;
     [SerializeField] private int startingResortValue = 5000;
+
+    // Fallback values used only when no GameConfig asset is assigned.
+    private const int DefaultStartingCoins = 1000;
+    private const int DefaultStartingEnergy = 100;
 
     [Header("Starting Buildings")]
     [SerializeField] private string[] startingBuildingIds = { "reception", "hotel", "restaurant" };
@@ -50,6 +55,14 @@ public class GameManager : MonoBehaviour
 
     public void InitializeNewGame()
     {
+        if (config == null)
+        {
+            Debug.LogWarning("GameManager: GameConfig is not assigned, using default starting values.");
+        }
+
+        int startingCoins = config != null ? config.startingCoins : DefaultStartingCoins;
+        int startingEnergy = config != null ? config.startingEnergy : DefaultStartingEnergy;
+
         CurrentState = new GameState(
             startingCoins,
             startingEnergy,
