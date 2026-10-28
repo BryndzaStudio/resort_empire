@@ -117,3 +117,8 @@ Builds/
 Logs/
 UserSettings/
 >>>>>>> 757fae2 (BRYN-109: vytvorit unity projekt)
+AGENTS.md
+Assets/Tests.meta
+Assets/Tests/Editor.meta
+Assets/Tests/Editor/StartingResortStateTests.cs
+Assets/Tests/Editor/StartingResortStateTests.cs.meta
