@@ -39,6 +39,15 @@ Click inside the Game view before using the controls.
 - Saved building levels, active flags and worker counts are retained on later loads. Zero workers and an explicitly empty building list are not reset to the starting defaults.
 - As with the existing resource stories, this implementation is game-state data with Console inspection. Building placement, worker characters and task assignment are not implemented.
 
+## Top bar HUD (BRYN-14)
+
+- `Assets/Prefabs/UI/TopBarHud.prefab` shows coins, energy and resort value in three counters at the top left (background `top_bar_counter`, icon, TextMeshPro value). Stars are not part of it.
+- `TopBarHud.cs` reads `GameManager.Instance.CurrentState` in `Update` and redraws a text only when its value differs from the last displayed one. There are no change events yet, so this is polling. While `GameManager.Instance` or its state does not exist yet, it waits without errors.
+- Numbers use a space as thousands separator (`1250` -> `1 250`), see `TopBarHud.Format`.
+- `SafeAreaFitter.cs` fits the prefab root to `Screen.safeArea`, so the counters keep their margin inside notches and rounded corners.
+- Add the prefab as a child of `UIRoot` (Canvas). It does not block clicks (`raycastTarget` is off).
+- To test it, add `GameManager` and `GameStateTester` to the scene and press `C` / `E` (see Debug controls).
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
