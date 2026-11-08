@@ -81,6 +81,13 @@ Click inside the Game view before using the controls.
 - `WaveManager.IsWaveRunning` and `WaveManager.ArrivalFinished` can be read by other systems (e.g. the panel in BRYN-61).
 - If the player starts the next wave while the boat is still taking departing guests away, the boat runs the new wave right after it returns instead of ignoring the click.
 
+## Wave result screen (BRYN-54, BRYN-93)
+
+- `ResultScreen.cs` is on `UIRoot`. It builds the result screen in code in `Awake` (dark overlay, panel, texts, `Pokračovať` button) and keeps it hidden. `Panel Sprite` and `Button Sprite` are optional; without them plain colors are used.
+- On `WaveEvents.WaveFinished` it shows: guests, coins earned and duration of the wave.
+- BRYN-93: the screen must appear within 100 ms after the wave ends. It is only switched on in the same frame (nothing is loaded or instantiated). At the end of that frame it logs `Výsledok vlny zobrazený za X ms`; above 100 ms it logs a warning.
+- `Pokračovať` hides the screen and raises `WaveEvents.ResultScreenClosed`; `WaveManager` then unlocks the Start Wave button. Without a `ResultScreen` in the scene the button is unlocked right at the wave end.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.

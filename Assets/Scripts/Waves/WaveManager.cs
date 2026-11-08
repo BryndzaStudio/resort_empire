@@ -6,6 +6,7 @@ using UnityEngine;
 // Hostia neprídu naraz, ale rovnomerne: medzi dvoma hosťami je vždy rovnaký odstup (ArrivalInterval).
 // BRYN-92: celý príchod hostí z lode na ostrov musí trvať najviac 90 sekúnd.
 // BRYN-52: vlna sa skončí, keď hostia už nepribúdajú (všetci došli na ostrov) a všetky rady sú prázdne.
+// BRYN-54: po skončení vlny sa zobrazí výsledok (ResultScreen). Start Wave sa odomkne až po jeho zavretí.
 // Loď (BoatController) si od správcu vlny berie počet hostí a odstup medzi nimi.
 // Skript patrí na prázdny objekt WaveManager v scéne.
 public class WaveManager : MonoBehaviour
@@ -37,6 +38,7 @@ public class WaveManager : MonoBehaviour
     private float waveStartTime;
     private int coinsAtStart;
     private StartWaveButton startWaveButton;
+    private ResultScreen resultScreen;
 
     // BRYN-52: rady pri budovách. Každý rad sa prihlási funkciou, ktorá vráti true, keď je prázdny.
     private readonly List<Func<bool>> queues = new List<Func<bool>>();
@@ -66,18 +68,21 @@ public class WaveManager : MonoBehaviour
     private void Start()
     {
         startWaveButton = FindAnyObjectByType<StartWaveButton>(FindObjectsInactive.Include);
+        resultScreen = FindAnyObjectByType<ResultScreen>(FindObjectsInactive.Include);
     }
 
     private void OnEnable()
     {
         WaveEvents.StartWaveRequested += OnStartWaveRequested;
         GuestController.OnGuestArrived += OnGuestArrived;
+        WaveEvents.ResultScreenClosed += UnlockStartWaveButton;
     }
 
     private void OnDisable()
     {
         WaveEvents.StartWaveRequested -= OnStartWaveRequested;
         GuestController.OnGuestArrived -= OnGuestArrived;
+        WaveEvents.ResultScreenClosed -= UnlockStartWaveButton;
     }
 
     private void OnDestroy()
@@ -185,8 +190,12 @@ public class WaveManager : MonoBehaviour
         Debug.Log($"Vlna skončila: hostia {result.guestsArrived}, mince {result.coinsEarned:+0;-0;0}, trvanie {result.durationSeconds:0.0} s.");
         WaveEvents.RaiseWaveFinished(result);
 
-        // Po skončení vlny sa dá spustiť ďalšia.
-        UnlockStartWaveButton();
+        // Ďalšia vlna sa dá spustiť až po zavretí výsledku (WaveEvents.ResultScreenClosed).
+        // Ak v scéne obrazovka s výsledkom nie je, odomkneme tlačidlo hneď.
+        if (resultScreen == null)
+        {
+            UnlockStartWaveButton();
+        }
     }
 
     private void UnlockStartWaveButton()
