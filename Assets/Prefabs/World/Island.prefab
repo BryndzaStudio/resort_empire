@@ -65,12 +65,16 @@ MonoBehaviour:
     - {fileID: 21300000, guid: a6a48d2bcba74894296c2ce579d92eee, type: 3}
     - {fileID: 21300000, guid: 66e64e2e259dfb04585f5df2358d3855, type: 3}
     - {fileID: 21300000, guid: 3d45a05699b010641a61e759efcc1c9d, type: 3}
+    useCustomBadgePosition: 0
+    badgeLocalPosition: {x: 0, y: 0}
   - type: 1
     anchor: {fileID: 7210513391828402780}
     levelSprites:
     - {fileID: 21300000, guid: d641774337deb91479688a278844b0e7, type: 3}
     - {fileID: 21300000, guid: 8af7d4802e904e64a98c5b855d1f83b5, type: 3}
     - {fileID: 21300000, guid: cf3a7e0cc565d6540983b72a54707282, type: 3}
+    useCustomBadgePosition: 0
+    badgeLocalPosition: {x: 0, y: 0}
 --- !u!1 &1943539871045601942
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,6 +166,37 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &2226051115953483335
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2140588766537119586}
+  m_Layer: 0
+  m_Name: PierEnd
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2140588766537119586
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2226051115953483335}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.469999, y: 3.7260008, z: 0}
+  m_LocalScale: {x: 1.0265, y: 1.0265, z: 1.0265}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 209790667691978527}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2410054043152210396
 GameObject:
   m_ObjectHideFlags: 0
@@ -239,6 +274,37 @@ Transform:
   - {fileID: 2208976751135964282}
   - {fileID: 209790667691978527}
   m_Father: {fileID: 6005684884019071965}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2956898259528623414
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3191651287296350350}
+  m_Layer: 0
+  m_Name: PierStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3191651287296350350
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2956898259528623414}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.21, y: -2.7, z: 0}
+  m_LocalScale: {x: 1.0265, y: 1.0265, z: 1.0265}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 209790667691978527}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3519002443980568555
 GameObject:
@@ -1329,12 +1395,20 @@ PrefabInstance:
       value: Pier_Left
       objectReference: {fileID: 0}
     - target: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -14.13
+      value: -13.29
       objectReference: {fileID: 0}
     - target: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -8.14
+      value: -7.78
       objectReference: {fileID: 0}
     - target: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1370,7 +1444,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3191651287296350350}
+    - targetCorrespondingSourceObject: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2140588766537119586}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
 --- !u!4 &209790667691978527 stripped
