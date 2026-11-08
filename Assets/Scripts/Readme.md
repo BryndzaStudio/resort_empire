@@ -73,6 +73,14 @@ Click inside the Game view before using the controls.
 - `BoatController` takes the guest count and the gap from `WaveManager.Instance` during a wave. Without a `WaveManager` in the scene it behaves as before (2 guests).
 - BRYN-92: the arrival of all guests (Start Wave click until the last guest reaches the island) must take at most 90 s. `WaveManager` measures it and logs `príchod trval XX s`; above 90 s it logs a warning. The remaining time up to 90 s covers the boat trip and the walk along the pier, so `Arrival Spread` is limited to 75 s.
 
+## Wave end (BRYN-52)
+
+- The wave ends when guests no longer arrive (all guests of the wave reached the island) and all queues are empty.
+- Queues (BRYN-64, BRYN-65, BRYN-67) register with the wave: `WaveManager.Instance.RegisterQueue(() => myQueue.Count == 0);` (and `UnregisterQueue` with the same delegate). Until a queue registers, all queues count as empty, so the wave currently ends when the last guest reaches the island.
+- At the end `WaveManager` raises `WaveEvents.WaveFinished(WaveResult)` with guests arrived, coins earned during the wave and duration, and unlocks the Start Wave button.
+- `WaveManager.IsWaveRunning` and `WaveManager.ArrivalFinished` can be read by other systems (e.g. the panel in BRYN-61).
+- If the player starts the next wave while the boat is still taking departing guests away, the boat runs the new wave right after it returns instead of ignoring the click.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.

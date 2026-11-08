@@ -54,6 +54,8 @@ public class BoatController : MonoBehaviour
     private Vector3 offscreenExit;
     private bool ready;
     private bool running;
+    // BRYN-52: ďalšia vlna bola spustená, kým loď ešte odchádzala z predošlej. Loď ju odplaví hneď potom.
+    private bool waveQueued;
     // Hostia, ktorých sme poslali. Loď len sleduje, či ešte existujú, hostia loď nevolajú.
     private readonly List<GuestController> guests = new List<GuestController>();
 
@@ -107,6 +109,7 @@ public class BoatController : MonoBehaviour
         WaveEvents.StartWaveRequested -= OnStartWaveRequested;
         StopAllCoroutines();
         running = false;
+        waveQueued = false;
     }
 
     private void OnDestroy()
@@ -117,8 +120,16 @@ public class BoatController : MonoBehaviour
     // BRYN-49/94: handler kliknutia. Nič ťažké: len spustí cyklus, prvý pohyb lode sa vykoná hneď.
     private void OnStartWaveRequested()
     {
-        if (!ready || running)
+        if (!ready)
         {
+            return;
+        }
+
+        // BRYN-52: vlna končí, keď sú hostia na ostrove, ale loď ešte odváža odchádzajúcich hostí.
+        // Ak hráč medzitým spustí ďalšiu vlnu, loď ju neignoruje, ale spraví ju hneď po návrate.
+        if (running)
+        {
+            waveQueued = true;
             return;
         }
 
@@ -130,16 +141,23 @@ public class BoatController : MonoBehaviour
     // BRYN-50: počet hostí a rovnomerný odstup medzi nimi určuje WaveManager (ak je v scéne).
     private IEnumerator WaveRoutine()
     {
-        int count = arrivingGuests;
-        float interval = guestInterval;
-
-        if (WaveManager.Instance != null)
+        do
         {
-            count = WaveManager.Instance.GuestsPerWave;
-            interval = WaveManager.Instance.ArrivalInterval;
-        }
+            waveQueued = false;
 
-        yield return RunCycle(count, interval);
+            int count = arrivingGuests;
+            float interval = guestInterval;
+
+            if (WaveManager.Instance != null)
+            {
+                count = WaveManager.Instance.GuestsPerWave;
+                interval = WaveManager.Instance.ArrivalInterval;
+            }
+
+            yield return RunCycle(count, interval);
+        }
+        while (waveQueued);
+
         running = false;
     }
 
