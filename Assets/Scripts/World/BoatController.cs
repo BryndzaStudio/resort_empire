@@ -25,6 +25,9 @@ public class BoatController : MonoBehaviour
     // Spawn aj odchod sa nájdu automaticky tak, aby bola loď celá mimo záberu kamery (aj po zmene jej veľkosti).
     [SerializeField] private Vector2 approachDirection = new Vector2(0.87f, -0.49f);
     [SerializeField] private float offscreenMargin = 1f;   // rezerva za okrajom záberu
+    // BRYN-49: true = loď čaká mimo záberu na WaveEvents.StartWaveRequested a prebehne jeden cyklus.
+    // false = správa sa ako predtým (cyklus sa spustí sám a opakuje).
+    [SerializeField] private bool startOnWaveRequest = true;
 
     [Header("Mólo")]
     [SerializeField] private string pierName = "Pier_Left";
@@ -45,6 +48,12 @@ public class BoatController : MonoBehaviour
     private SpriteRenderer boatRenderer;
     private SpriteRenderer pier;
 
+    // BRYN-94: body sa spočítajú vopred v Start(), po kliknutí sa už nič nepočíta.
+    private Vector3 dockPosition;
+    private Vector3 offscreenStart;
+    private Vector3 offscreenExit;
+    private bool ready;
+    private bool running;
     // Hostia, ktorých sme poslali. Loď len sleduje, či ešte existujú, hostia loď nevolajú.
     private readonly List<GuestController> guests = new List<GuestController>();
 
@@ -59,22 +68,45 @@ public class BoatController : MonoBehaviour
             return;
         }
 
-        StartCoroutine(Run());
-    }
+        dockPosition = DockPosition();
+        offscreenStart = OffscreenPoint(dockPosition, -approachDirection);
+        offscreenExit = OffscreenPoint(dockPosition, approachDirection);
+        ready = true;
 
-    // Pri opätovnom zapnutí lode sa cyklus spustí znova (pri prvom zapnutí to robí Start).
-    private void OnEnable()
-    {
-        if (pier != null)
+        if (startOnWaveRequest)
+        {
+            transform.position = offscreenStart;
+        }
+        else
         {
             StartCoroutine(Run());
         }
     }
 
-    // Pri vypnutí alebo zničení lode zastavíme všetky coroutines.
+    // Pri opätovnom zapnutí lode sa cyklus spustí znova (pri prvom zapnutí to robí Start).
+    // V režime vlny sa len prihlásime na udalosť a loď čaká mimo záberu.
+    private void OnEnable()
+    {
+        if (startOnWaveRequest)
+        {
+            WaveEvents.StartWaveRequested += OnStartWaveRequested;
+            if (ready)
+            {
+                transform.position = offscreenStart;
+            }
+        }
+        else if (pier != null)
+        {
+            StartCoroutine(Run());
+        }
+    }
+
+    // Pri vypnutí alebo zničení lode zastavíme všetky coroutines a odhlásime sa z udalosti (je statická).
     private void OnDisable()
     {
+        WaveEvents.StartWaveRequested -= OnStartWaveRequested;
         StopAllCoroutines();
+        running = false;
     }
 
     private void OnDestroy()
@@ -82,26 +114,50 @@ public class BoatController : MonoBehaviour
         StopAllCoroutines();
     }
 
+    // BRYN-49/94: handler kliknutia. Nič ťažké: len spustí cyklus, prvý pohyb lode sa vykoná hneď.
+    private void OnStartWaveRequested()
+    {
+        if (!ready || running)
+        {
+            return;
+        }
+
+        running = true;
+        StartCoroutine(WaveRoutine());
+    }
+
+    // Jeden cyklus pre vlnu. Potom loď ostane mimo záberu a čaká.
+    private IEnumerator WaveRoutine()
+    {
+        yield return RunCycle();
+        running = false;
+    }
+
     // Jeden cyklus: loď priplaví, hostia vystúpia, hostia nastúpia, loď odpláva, pauza a znova.
     private IEnumerator Run()
     {
         while (this != null)
         {
-            Vector3 dock = DockPosition();
-            transform.position = OffscreenPoint(dock, -approachDirection);
-
-            yield return MoveTo(dock);
-            yield return new WaitForSeconds(dockPause);
-
-            yield return SendGuests(arrivingGuests, false);
-            yield return new WaitForSeconds(dockPause);
-
-            yield return SendGuests(departingGuests, true);
-            yield return new WaitForSeconds(dockPause);
-
-            yield return MoveTo(OffscreenPoint(dock, approachDirection));
+            yield return RunCycle();
             yield return new WaitForSeconds(cycleInterval);
         }
+    }
+
+    // Jeden cyklus: príchod lode, vystúpenie hostí, nastúpenie hostí, odplávanie.
+    private IEnumerator RunCycle()
+    {
+        transform.position = offscreenStart;
+
+        yield return MoveTo(dockPosition);
+        yield return new WaitForSeconds(dockPause);
+
+        yield return SendGuests(arrivingGuests, false);
+        yield return new WaitForSeconds(dockPause);
+
+        yield return SendGuests(departingGuests, true);
+        yield return new WaitForSeconds(dockPause);
+
+        yield return MoveTo(offscreenExit);
     }
 
     // Pohyb lode k cieľu konštantnou rýchlosťou.

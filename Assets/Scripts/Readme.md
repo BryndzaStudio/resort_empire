@@ -56,6 +56,16 @@ Click inside the Game view before using the controls.
 - `StartWaveButton.SetInteractable(bool)` is for the wave logic to unlock the button again after the wave. Until BRYN-49 does that, the button stays locked after one click.
 - In `SampleScene`, `UIRoot` contains `TopBarHud` and `StartWaveButton`; the EventSystem comes from the `UIRoot` prefab.
 
+## Wave start: boat (BRYN-49, BRYN-94)
+
+- `BoatController` (BRYN-20) now waits off-screen for `WaveEvents.StartWaveRequested` and runs one cycle (arrive, guests get off, guests board, leave). It subscribes in `OnEnable` and unsubscribes in `OnDisable` (the event is static). After the cycle the boat stays off-screen.
+- `startOnWaveRequest` (default `true`): when `false`, the boat behaves as before (starts by itself and repeats).
+- Dock and off-screen points are computed once in `Start()`, not after the click, so they are not recomputed if the camera size changes at runtime. The click handler only starts a coroutine; the first boat movement happens in the same frame (no Instantiate, Resources.Load or SaveGame, no wait).
+- `FrameRateSetup.cs` sets `Application.targetFrameRate = 60` before the first scene loads.
+- The Start Wave button stays locked after the click. Unlocking at the end of the wave is a later task (no `WaveFinished` event yet).
+- Measured in the Editor (`onClick.Invoke()` from a script, timestamp at the click vs. the first change of the boat position): about 3 ms. It does not include touch input latency; verify on a real device.
+- No PlayMode test: it would need an `.asmdef`, and a test assembly cannot reference `Assembly-CSharp` where this code lives.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
