@@ -11,7 +11,7 @@ public class BoatController : MonoBehaviour
     [Header("Hostia")]
     [SerializeField] private GuestController guestPrefab;
     [SerializeField] private Sprite[] guestSprites;
-    [Range(1, 3)] [SerializeField] private int arrivingGuests = 2;   // koľko hostí vystúpi z lode
+    [Range(1, 3)] [SerializeField] private int arrivingGuests = 2;   // koľko hostí vystúpi z lode (mimo vlny; počas vlny určuje WaveManager)
     [Range(1, 3)] [SerializeField] private int departingGuests = 2;  // koľko hostí nastúpi na loď
     [SerializeField] private float guestInterval = 0.8f;   // odstup medzi hosťami (s)
     [SerializeField] private float guestSpeed = 2f;        // rýchlosť chôdze po móle
@@ -54,6 +54,8 @@ public class BoatController : MonoBehaviour
     private Vector3 offscreenExit;
     private bool ready;
     private bool running;
+    // BRYN-52: ďalšia vlna bola spustená, kým loď ešte odchádzala z predošlej. Loď ju odplaví hneď potom.
+    private bool waveQueued;
     // Hostia, ktorých sme poslali. Loď len sleduje, či ešte existujú, hostia loď nevolajú.
     private readonly List<GuestController> guests = new List<GuestController>();
 
@@ -107,6 +109,7 @@ public class BoatController : MonoBehaviour
         WaveEvents.StartWaveRequested -= OnStartWaveRequested;
         StopAllCoroutines();
         running = false;
+        waveQueued = false;
     }
 
     private void OnDestroy()
@@ -117,8 +120,16 @@ public class BoatController : MonoBehaviour
     // BRYN-49/94: handler kliknutia. Nič ťažké: len spustí cyklus, prvý pohyb lode sa vykoná hneď.
     private void OnStartWaveRequested()
     {
-        if (!ready || running)
+        if (!ready)
         {
+            return;
+        }
+
+        // BRYN-52: vlna končí, keď sú hostia na ostrove, ale loď ešte odváža odchádzajúcich hostí.
+        // Ak hráč medzitým spustí ďalšiu vlnu, loď ju neignoruje, ale spraví ju hneď po návrate.
+        if (running)
+        {
+            waveQueued = true;
             return;
         }
 
@@ -127,9 +138,26 @@ public class BoatController : MonoBehaviour
     }
 
     // Jeden cyklus pre vlnu. Potom loď ostane mimo záberu a čaká.
+    // BRYN-50: počet hostí a rovnomerný odstup medzi nimi určuje WaveManager (ak je v scéne).
     private IEnumerator WaveRoutine()
     {
-        yield return RunCycle();
+        do
+        {
+            waveQueued = false;
+
+            int count = arrivingGuests;
+            float interval = guestInterval;
+
+            if (WaveManager.Instance != null)
+            {
+                count = WaveManager.Instance.GuestsPerWave;
+                interval = WaveManager.Instance.ArrivalInterval;
+            }
+
+            yield return RunCycle(count, interval);
+        }
+        while (waveQueued);
+
         running = false;
     }
 
@@ -138,23 +166,23 @@ public class BoatController : MonoBehaviour
     {
         while (this != null)
         {
-            yield return RunCycle();
+            yield return RunCycle(arrivingGuests, guestInterval);
             yield return new WaitForSeconds(cycleInterval);
         }
     }
 
     // Jeden cyklus: príchod lode, vystúpenie hostí, nastúpenie hostí, odplávanie.
-    private IEnumerator RunCycle()
+    private IEnumerator RunCycle(int arrivingCount, float arrivingInterval)
     {
         transform.position = offscreenStart;
 
         yield return MoveTo(dockPosition);
         yield return new WaitForSeconds(dockPause);
 
-        yield return SendGuests(arrivingGuests, false);
+        yield return SendGuests(arrivingCount, false, arrivingInterval);
         yield return new WaitForSeconds(dockPause);
 
-        yield return SendGuests(departingGuests, true);
+        yield return SendGuests(departingGuests, true, guestInterval);
         yield return new WaitForSeconds(dockPause);
 
         yield return MoveTo(offscreenExit);
@@ -172,7 +200,7 @@ public class BoatController : MonoBehaviour
 
     // Pošle hostí jedného po druhom a počká, kým všetci zmiznú.
     // Sprity sa miešajú, takže v jednej skupine sa neopakuje ten istý hosť (kým sú k dispozícii).
-    private IEnumerator SendGuests(int count, bool departing)
+    private IEnumerator SendGuests(int count, bool departing, float interval)
     {
         List<Sprite> sprites = ShuffledSprites();
 
@@ -180,7 +208,12 @@ public class BoatController : MonoBehaviour
         {
             Sprite sprite = sprites.Count > 0 ? sprites[i % sprites.Count] : null;
             SpawnGuest(sprite, departing);
-            yield return new WaitForSeconds(guestInterval);
+
+            // Po poslednom hosťovi už nečakáme, aby sa príchod zbytočne nepredlžoval.
+            if (i < count - 1)
+            {
+                yield return new WaitForSeconds(interval);
+            }
         }
 
         while (AnyGuestAlive())

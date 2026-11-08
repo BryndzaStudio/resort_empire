@@ -66,6 +66,28 @@ Click inside the Game view before using the controls.
 - Measured in the Editor (`onClick.Invoke()` from a script, timestamp at the click vs. the first change of the boat position): about 3 ms. It does not include touch input latency; verify on a real device.
 - No PlayMode test: it would need an `.asmdef`, and a test assembly cannot reference `Assembly-CSharp` where this code lives.
 
+## Wave: even guest arrival (BRYN-50, BRYN-92)
+
+- `WaveManager.cs` (on the `WaveManager` object in `SampleScene`) defines the wave: `Guests Per Wave` (default 10) and `Arrival Spread` (default 60 s).
+- Guests do not arrive at once: the boat sends them one by one with the same gap, `ArrivalInterval = Arrival Spread / (Guests Per Wave - 1)` (10 guests in 60 s = one every 6.7 s).
+- `BoatController` takes the guest count and the gap from `WaveManager.Instance` during a wave. Without a `WaveManager` in the scene it behaves as before (2 guests).
+- BRYN-92: the arrival of all guests (Start Wave click until the last guest reaches the island) must take at most 90 s. `WaveManager` measures it and logs `príchod trval XX s`; above 90 s it logs a warning. The remaining time up to 90 s covers the boat trip and the walk along the pier, so `Arrival Spread` is limited to 75 s.
+
+## Wave end (BRYN-52)
+
+- The wave ends when guests no longer arrive (all guests of the wave reached the island) and all queues are empty.
+- Queues (BRYN-64, BRYN-65, BRYN-67) register with the wave: `WaveManager.Instance.RegisterQueue(() => myQueue.Count == 0);` (and `UnregisterQueue` with the same delegate). Until a queue registers, all queues count as empty, so the wave currently ends when the last guest reaches the island.
+- At the end `WaveManager` raises `WaveEvents.WaveFinished(WaveResult)` with guests arrived, coins earned during the wave and duration, and unlocks the Start Wave button.
+- `WaveManager.IsWaveRunning` and `WaveManager.ArrivalFinished` can be read by other systems (e.g. the panel in BRYN-61).
+- If the player starts the next wave while the boat is still taking departing guests away, the boat runs the new wave right after it returns instead of ignoring the click.
+
+## Wave result screen (BRYN-54, BRYN-93)
+
+- `ResultScreen.cs` is on `UIRoot`. It builds the result screen in code in `Awake` (dark overlay, panel, texts, `Pokračovať` button) and keeps it hidden. `Panel Sprite` and `Button Sprite` are optional; without them plain colors are used.
+- On `WaveEvents.WaveFinished` it shows: guests, coins earned and duration of the wave.
+- BRYN-93: the screen must appear within 100 ms after the wave ends. It is only switched on in the same frame (nothing is loaded or instantiated). At the end of that frame it logs `Výsledok vlny zobrazený za X ms`; above 100 ms it logs a warning.
+- `Pokračovať` hides the screen and raises `WaveEvents.ResultScreenClosed`; `WaveManager` then unlocks the Start Wave button. Without a `ResultScreen` in the scene the button is unlocked right at the wave end.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
