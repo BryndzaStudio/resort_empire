@@ -66,6 +66,13 @@ Click inside the Game view before using the controls.
 - Measured in the Editor (`onClick.Invoke()` from a script, timestamp at the click vs. the first change of the boat position): about 3 ms. It does not include touch input latency; verify on a real device.
 - No PlayMode test: it would need an `.asmdef`, and a test assembly cannot reference `Assembly-CSharp` where this code lives.
 
+## Wave: even guest arrival (BRYN-50, BRYN-92)
+
+- `WaveManager.cs` (on the `WaveManager` object in `SampleScene`) defines the wave: `Guests Per Wave` (default 10) and `Arrival Spread` (default 60 s).
+- Guests do not arrive at once: the boat sends them one by one with the same gap, `ArrivalInterval = Arrival Spread / (Guests Per Wave - 1)` (10 guests in 60 s = one every 6.7 s).
+- `BoatController` takes the guest count and the gap from `WaveManager.Instance` during a wave. Without a `WaveManager` in the scene it behaves as before (2 guests).
+- BRYN-92: the arrival of all guests (Start Wave click until the last guest reaches the island) must take at most 90 s. `WaveManager` measures it and logs `príchod trval XX s`; above 90 s it logs a warning. The remaining time up to 90 s covers the boat trip and the walk along the pier, so `Arrival Spread` is limited to 75 s.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
