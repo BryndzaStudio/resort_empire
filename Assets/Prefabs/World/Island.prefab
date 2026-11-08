@@ -57,6 +57,8 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 962383c4a26f22743ad39be32ec2fd0b, type: 3}
     - {fileID: 21300000, guid: 4d93536e16c5e7c46b41d86fd2060c06, type: 3}
     - {fileID: 21300000, guid: 37ecf9ce68692e94c9d4ebb55c26bffd, type: 3}
+    useCustomBadgePosition: 1
+    badgeLocalPosition: {x: -4.8, y: 7.9}
   - type: 2
     anchor: {fileID: 4730202009570873428}
     levelSprites:

@@ -18,6 +18,12 @@ public class IslandView : MonoBehaviour
 
         // Obrázky podľa levelu: prvok 0 = lv1, prvok 1 = lv2, prvok 2 = lv3.
         public Sprite[] levelSprites;
+
+        // BRYN-29: Vlastná pozícia odznaku s počtom miest, v lokálnych súradniciach
+        // pod budovou (rovnaké čísla ako v Inspectore počas Play).
+        // Ak je vypnutá, odznak sa dá automaticky nad vrch obrázka budovy.
+        public bool useCustomBadgePosition;
+        public Vector2 badgeLocalPosition;
     }
 
     [SerializeField] private BuildingView buildingPrefab;
@@ -71,7 +77,8 @@ public class IslandView : MonoBehaviour
             }
 
             BuildingView view = Instantiate(buildingPrefab, slot.anchor.position, Quaternion.identity, slot.anchor);
-            view.Setup(building.type, sprite);
+            Vector2? badgePosition = slot.useCustomBadgePosition ? slot.badgeLocalPosition : (Vector2?)null;
+            view.Setup(building.type, sprite, badgePosition);
             spawnedBuildings.Add(view);
         }
     }

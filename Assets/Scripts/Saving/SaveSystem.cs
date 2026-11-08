@@ -36,6 +36,16 @@ public static class SaveSystem
         // values, including zero workers or an empty building list, overwrite it.
         var state = new GameState(0, 0, 0);
         JsonUtility.FromJsonOverwrite(json, state);
+
+        // BRYN-29: budovy zo starého savu nemajú capacity (0), doplníme východiskovú hodnotu.
+        if (state.buildings != null)
+        {
+            foreach (BuildingState building in state.buildings)
+            {
+                building.EnsureCapacity();
+            }
+        }
+
         return state;
     }
 
