@@ -48,6 +48,14 @@ Click inside the Game view before using the controls.
 - Add the prefab as a child of `UIRoot` (Canvas). It does not block clicks (`raycastTarget` is off).
 - To test it, add `GameManager` and `GameStateTester` to the scene and press `C` / `E` (see Debug controls).
 
+## Start Wave button (BRYN-48)
+
+- `Assets/Prefabs/UI/StartWaveButton.prefab` is a full-screen container with `SafeAreaFitter`; the button (`btn_start_wave`) sits bottom right. The sprite has no text, so the "Start Wave" label is a TMP child.
+- `StartWaveButton.cs` (on the Button): a click sets `interactable = false` and calls `WaveEvents.RaiseStartWaveRequested()`. Nothing else runs in the handler (no SaveGame, Instantiate or Resources.Load), because BRYN-94 needs the wave animation to start within 100 ms of the click.
+- `WaveEvents.cs`: static event `StartWaveRequested`. The wave logic (BRYN-49) subscribes to it.
+- `StartWaveButton.SetInteractable(bool)` is for the wave logic to unlock the button again after the wave. Until BRYN-49 does that, the button stays locked after one click.
+- In `SampleScene`, `UIRoot` contains `TopBarHud` and `StartWaveButton`; the EventSystem comes from the `UIRoot` prefab.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
