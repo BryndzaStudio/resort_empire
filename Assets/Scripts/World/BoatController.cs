@@ -11,8 +11,8 @@ public class BoatController : MonoBehaviour
     [Header("Hostia")]
     [SerializeField] private GuestController guestPrefab;
     [SerializeField] private Sprite[] guestSprites;
-    [Range(1, 3)] [SerializeField] private int arrivingGuests = 2;   // koľko hostí vystúpi z lode (mimo vlny; počas vlny určuje WaveManager)
-    [Range(1, 3)] [SerializeField] private int departingGuests = 2;  // koľko hostí nastúpi na loď
+    [Range(1, 3)][SerializeField] private int arrivingGuests = 2;   // koľko hostí vystúpi z lode (mimo vlny; počas vlny určuje WaveManager)
+    [Range(1, 3)][SerializeField] private int departingGuests = 2;  // koľko hostí nastúpi na loď
     [SerializeField] private float guestInterval = 0.8f;   // odstup medzi hosťami (s)
     [SerializeField] private float guestSpeed = 2f;        // rýchlosť chôdze po móle
     [SerializeField] private Vector2 guestBoardOffset = new Vector2(0.6f, 0.9f); // kde na lodi hosť nastupuje/vystupuje (od stredu lode, smerom k móle)
@@ -233,9 +233,19 @@ public class BoatController : MonoBehaviour
         Vector3 spawnPoint = departing ? end : boardPoint;
         Vector3[] path = departing ? new[] { start, boardPoint } : new[] { start, end };
 
+
         GuestController guest = Instantiate(guestPrefab, spawnPoint, Quaternion.identity);
         guest.Setup(sprite, path, guestSpeed, departing);
+
+        // BRYN-43: Assign a need and show its icon when the guest spawns.
+        // Departing guests do not receive new needs.
+        if (!departing && GuestManager.Instance != null)
+        {
+            GuestManager.Instance.RegisterGuest(guest);
+        }
+
         guests.Add(guest);
+
     }
 
     // Zničený hosť (už zmizol) sa zo zoznamu odstráni, Unity ho porovná s null.
