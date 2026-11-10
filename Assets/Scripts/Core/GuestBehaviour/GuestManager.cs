@@ -22,16 +22,6 @@ public class GuestManager : MonoBehaviour
         Instance = this;
     }
 
-    private void OnEnable()
-    {
-        GuestController.OnGuestArrived += HandleGuestArrived;
-    }
-
-    private void OnDisable()
-    {
-        GuestController.OnGuestArrived -= HandleGuestArrived;
-    }
-
     private void OnDestroy()
     {
         if (Instance == this)
@@ -40,26 +30,45 @@ public class GuestManager : MonoBehaviour
         }
     }
 
-    private void HandleGuestArrived(GuestController guest)
+    // BRYN-41/43: Assign a need when an arriving guest spawns.
+    public void RegisterGuest(GuestController guest)
     {
-        GameManager gameManager = GameManager.Instance;
-
-        if (gameManager == null || gameManager.CurrentState == null)
+        if (guest == null)
         {
-            Debug.LogWarning("Cannot assign guest need: GameState unavailable.");
+            return;
+        }
+
+        GameManager manager = GameManager.Instance;
+
+        if (manager == null || manager.CurrentState == null)
+        {
+            Debug.LogWarning("Guest registration failed: no game state.");
             return;
         }
 
         if (!GuestNeedAssigner.TryAssignNeed(
-            gameManager.CurrentState, out GuestNeed need))
+            manager.CurrentState, out GuestNeed need))
         {
-            Debug.LogWarning("Cannot assign guest need: no active compatible building.");
+            Debug.LogWarning("No compatible building for guest need.");
             return;
         }
 
         GuestState guestState = new GuestState(nextGuestId++, need);
         guests.Add(guestState);
 
-        Debug.Log($"BRYN-41: Guest {guestState.id} assigned need: {guestState.need}");
+        GuestNeedIcon needIcon = guest.GetComponent<GuestNeedIcon>();
+
+        if (needIcon != null)
+        {
+            needIcon.ShowNeed(need);
+        }
+        else
+        {
+            Debug.LogWarning("Guest prefab is missing GuestNeedIcon.");
+        }
+
+        Debug.Log(
+            $"BRYN-41/43: Guest {guestState.id} needs {guestState.need}"
+        );
     }
 }
