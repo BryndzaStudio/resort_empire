@@ -11,6 +11,12 @@ public class GameStateTester : MonoBehaviour
             Debug.Log("Added 100 coins.");
         }
 
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            GameManager.Instance.CurrentState.energy -= 10;
+            Debug.Log("Removed 10 energy.");
+        }
+
         if (Input.GetKeyDown(KeyCode.E))
         {
             GameManager.Instance.CurrentState.energy -= 10;
