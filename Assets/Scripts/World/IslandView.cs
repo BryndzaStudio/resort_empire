@@ -19,6 +19,13 @@ public class IslandView : MonoBehaviour
         // Obrázky podľa levelu: prvok 0 = lv1, prvok 1 = lv2, prvok 2 = lv3.
         public Sprite[] levelSprites;
 
+        // BRYN-64/67: basic service time and guest positions for this building.
+        [Min(0.1f)] public float serviceSeconds = 10f;
+        [Tooltip("Guest entrance offset from the building anchor, in world units.")]
+        public Vector2 guestEntranceOffset = new Vector2(0f, 0.1f);
+        [Tooltip("Distance and direction between waiting guests, in world units.")]
+        public Vector2 guestQueueStep = new Vector2(1.25f, -0.65f);
+
         // BRYN-29: Vlastná pozícia odznaku s počtom miest, v lokálnych súradniciach
         // pod budovou (rovnaké čísla ako v Inspectore počas Play).
         // Ak je vypnutá, odznak sa dá automaticky nad vrch obrázka budovy.
@@ -78,7 +85,8 @@ public class IslandView : MonoBehaviour
 
             BuildingView view = Instantiate(buildingPrefab, slot.anchor.position, Quaternion.identity, slot.anchor);
             Vector2? badgePosition = slot.useCustomBadgePosition ? slot.badgeLocalPosition : (Vector2?)null;
-            view.Setup(building.type, sprite, badgePosition);
+            view.Setup(building.type, sprite, badgePosition,
+                slot.serviceSeconds, slot.guestEntranceOffset, slot.guestQueueStep);
             spawnedBuildings.Add(view);
         }
     }

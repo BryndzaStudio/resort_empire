@@ -75,8 +75,8 @@ Click inside the Game view before using the controls.
 
 ## Wave end (BRYN-52)
 
-- The wave ends when guests no longer arrive (all guests of the wave reached the island) and all queues are empty.
-- Queues (BRYN-64, BRYN-65, BRYN-67) register with the wave: `WaveManager.Instance.RegisterQueue(() => myQueue.Count == 0);` (and `UnregisterQueue` with the same delegate). Until a queue registers, all queues count as empty, so the wave currently ends when the last guest reaches the island.
+- The wave ends after all guests have arrived and their queued or ongoing service has finished.
+- `GuestManager` registers with `WaveManager.RegisterQueue` and waits until all its visits finish, including guests already inside buildings. This keeps the result screen from appearing before the final service completes. The queue counter itself counts only waiting guests.
 - At the end `WaveManager` raises `WaveEvents.WaveFinished(WaveResult)` with guests arrived, coins earned during the wave and duration, and unlocks the Start Wave button.
 - `WaveManager.IsWaveRunning` and `WaveManager.ArrivalFinished` can be read by other systems (e.g. the panel in BRYN-61).
 - If the player starts the next wave while the boat is still taking departing guests away, the boat runs the new wave right after it returns instead of ignoring the click.
@@ -88,8 +88,19 @@ Click inside the Game view before using the controls.
 - BRYN-93: the screen must appear within 100 ms after the wave ends. It is only switched on in the same frame (nothing is loaded or instantiated). At the end of that frame it logs `Výsledok vlny zobrazený za X ms`; above 100 ms it logs a warning.
 - `Pokračovať` hides the screen and raises `WaveEvents.ResultScreenClosed`; `WaveManager` then unlocks the Start Wave button. Without a `ResultScreen` in the scene the button is unlocked right at the wave end.
 
+## Guest assignment and queues (BRYN-64, BRYN-65, BRYN-67)
+
+- `BuildingGuestQueue` owns a FIFO line and reserved places for one building. Food goes to Restaurant, Drink to BeachBar, and Room to Reception. Inactive buildings are excluded.
+- At the end of the pier, `GuestManager` reserves a free place or adds the guest to the matching building's line. A reservation counts as occupied while the guest walks to the entrance, preventing overbooking. Only overflow guests count toward `GuestsInQueue` (BRYN-65).
+- Guests visibly walk to the entrance or their queue position. At the entrance they disappear inside and service begins. Service progresses using game time; after completion, the served counter increments, the place is released, and the oldest waiter walks inside (BRYN-64). The remaining line moves forward.
+- `IslandView` building slots configure `Service Seconds` (currently 10), `Guest Entrance Offset`, and `Guest Queue Step`. Positions use world units relative to the building anchor. `Assets/Prefabs/World/Island.prefab` contains the layouts for all three starting buildings.
+- `BoatController` waits only for guests to finish the pier journey, so building queues do not hold the boat at the dock. Assignment happens before the arrival event, including for the final guest of a wave.
+- Destroying a guest releases its reservation or removes it from the queue without counting it as served. Disabling `GuestManager` clears its own visits and reservations.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
 - Building upgrades and activation have saved state only; no upgrade or activation gameplay is included.
+- Service duration is configurable per building; level, worker and boost modifiers are separate work.
+- Full wave/guest save-and-resume is deferred by agreement. Saving behavior is unchanged: occupancy is persisted, but visits, queues and service progress are not. Reloading a save made during service can leave occupied places without guests; the follow-up must restore complete wave state, as required by the technical document, rather than silently reset progress.
 - Save-file corruption handling and validation still need to be implemented.

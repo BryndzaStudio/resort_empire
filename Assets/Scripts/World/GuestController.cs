@@ -1,24 +1,20 @@
 using System;
 using UnityEngine;
 
-// BRYN-20: Hosť, ktorý ide po móle (k ostrovu alebo k lodi). Pohyb je len medzi bodmi (waypointy).
-// Hosťa k žiadnej budove nepriraďuje a nemení dáta hry. Loď hosť nevolá, len vyvolá udalosť.
+// BRYN-20: pier travel. BRYN-64/67: the same guest continues to a queue/building.
 public class GuestController : MonoBehaviour
 {
-    // Hosť dorazil na koniec móla pri ostrove a zmizol.
-    // Kolega tu môže napojiť priradenie hosťa k budove: GuestController.OnGuestArrived += ...
     public static event Action<GuestController> OnGuestArrived;
-
-    // Hosť nastúpil na loď a zmizol.
     public static event Action<GuestController> OnGuestDeparted;
 
     private Vector3[] waypoints;
     private int nextWaypoint;
     private float speed;
     private bool departing;
+    private Action reachedDestination;
 
-    // Pri štarte hry vyčistíme udalosti, aby neostali odberatelia zo zničených objektov
-    // z predošlého Play (keď je vypnuté Reload Domain).
+    public bool HasFinishedPierJourney { get; private set; }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetEvents()
     {
@@ -26,58 +22,60 @@ public class GuestController : MonoBehaviour
         OnGuestDeparted = null;
     }
 
-    // Nastaví vzhľad hosťa, trasu a rýchlosť chôdze.
-    // departing = true: hosť odchádza loďou, false: prišiel loďou.
     public void Setup(Sprite sprite, Vector3[] path, float walkSpeed, bool departing)
     {
-        if (sprite != null)
-        {
-            GetComponent<SpriteRenderer>().sprite = sprite;
-        }
-
+        if (sprite != null) GetComponent<SpriteRenderer>().sprite = sprite;
         waypoints = path;
-        speed = walkSpeed;
+        nextWaypoint = 0;
+        speed = Mathf.Max(0.01f, walkSpeed);
         this.departing = departing;
+        reachedDestination = null;
+        HasFinishedPierJourney = false;
+    }
+
+    public void MoveTo(Vector3 destination, Action onReached = null)
+    {
+        destination.z = transform.position.z;
+        waypoints = new[] { destination };
+        nextWaypoint = 0;
+        reachedDestination = onReached;
     }
 
     private void Update()
     {
-        if (waypoints == null)
+        if (waypoints == null || nextWaypoint >= waypoints.Length) return;
+        transform.position = Vector3.MoveTowards(transform.position, waypoints[nextWaypoint], speed * Time.deltaTime);
+        if (transform.position != waypoints[nextWaypoint]) return;
+        nextWaypoint++;
+        if (nextWaypoint < waypoints.Length) return;
+
+        waypoints = null;
+        Action callback = reachedDestination;
+        reachedDestination = null;
+        if (HasFinishedPierJourney)
         {
+            callback?.Invoke();
             return;
         }
 
-        transform.position = Vector3.MoveTowards(transform.position, waypoints[nextWaypoint], speed * Time.deltaTime);
-
-        if (transform.position == waypoints[nextWaypoint])
-        {
-            nextWaypoint++;
-
-            // Koniec trasy: oznámime to a hosť zmizne.
-            if (nextWaypoint >= waypoints.Length)
-            {
-                Raise(departing ? OnGuestDeparted : OnGuestArrived, this);
-                Destroy(gameObject);
-            }
-        }
+        HasFinishedPierJourney = true;
+        bool assigned = !departing && GuestManager.Instance != null &&
+                        GuestManager.Instance.ArriveGuest(this);
+        Raise(departing ? OnGuestDeparted : OnGuestArrived, this);
+        if (!assigned) Destroy(gameObject);
     }
 
-    // Zavolá odberateľov udalosti. Zničené objekty (odberateľov) preskočí,
-    // aby nevznikol MissingReferenceException.
+    private void OnDestroy()
+    {
+        if (GuestManager.Instance != null) GuestManager.Instance.UnregisterGuest(this);
+    }
+
     private static void Raise(Action<GuestController> handlers, GuestController guest)
     {
-        if (handlers == null)
-        {
-            return;
-        }
-
+        if (handlers == null) return;
         foreach (Delegate handler in handlers.GetInvocationList())
         {
-            if (handler.Target is UnityEngine.Object target && target == null)
-            {
-                continue;
-            }
-
+            if (handler.Target is UnityEngine.Object target && target == null) continue;
             ((Action<GuestController>)handler).Invoke(guest);
         }
     }

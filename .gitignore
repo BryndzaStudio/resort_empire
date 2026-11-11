@@ -119,3 +119,6 @@ Assets/Tests.meta
 Assets/Tests/Editor.meta
 Assets/Tests/Editor/StartingResortStateTests.cs
 Assets/Tests/Editor/StartingResortStateTests.cs.meta
+build-document-prototype-mvp.md
+Assets/Tests/Editor/BuildingGuestQueueTests.cs
+Assets/Tests/Editor/BuildingGuestQueueTests.cs.meta

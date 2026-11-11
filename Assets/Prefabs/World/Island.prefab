@@ -57,6 +57,9 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 962383c4a26f22743ad39be32ec2fd0b, type: 3}
     - {fileID: 21300000, guid: 4d93536e16c5e7c46b41d86fd2060c06, type: 3}
     - {fileID: 21300000, guid: 37ecf9ce68692e94c9d4ebb55c26bffd, type: 3}
+    serviceSeconds: 10
+    guestEntranceOffset: {x: 1.8, y: 0.1}
+    guestQueueStep: {x: 1.25, y: 0.65}
     useCustomBadgePosition: 1
     badgeLocalPosition: {x: -4.8, y: 7.9}
   - type: 2
@@ -65,6 +68,9 @@ MonoBehaviour:
     - {fileID: 21300000, guid: a6a48d2bcba74894296c2ce579d92eee, type: 3}
     - {fileID: 21300000, guid: 66e64e2e259dfb04585f5df2358d3855, type: 3}
     - {fileID: 21300000, guid: 3d45a05699b010641a61e759efcc1c9d, type: 3}
+    serviceSeconds: 10
+    guestEntranceOffset: {x: -1.1, y: 0.1}
+    guestQueueStep: {x: -1.25, y: -0.65}
     useCustomBadgePosition: 0
     badgeLocalPosition: {x: 0, y: 0}
   - type: 1
@@ -73,6 +79,9 @@ MonoBehaviour:
     - {fileID: 21300000, guid: d641774337deb91479688a278844b0e7, type: 3}
     - {fileID: 21300000, guid: 8af7d4802e904e64a98c5b855d1f83b5, type: 3}
     - {fileID: 21300000, guid: cf3a7e0cc565d6540983b72a54707282, type: 3}
+    serviceSeconds: 10
+    guestEntranceOffset: {x: 0, y: 0.1}
+    guestQueueStep: {x: 1.25, y: -0.65}
     useCustomBadgePosition: 0
     badgeLocalPosition: {x: 0, y: 0}
 --- !u!1 &1943539871045601942
