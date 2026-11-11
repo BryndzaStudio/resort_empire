@@ -48,6 +48,14 @@ public class GuestStatistics : MonoBehaviour
         OnStatisticsChanged?.Invoke();
     }
 
+    public void SetQueueCount(int count)
+    {
+        count = Mathf.Max(0, count);
+        if (GuestsInQueue == count) return;
+        GuestsInQueue = count;
+        OnStatisticsChanged?.Invoke();
+    }
+
     public void ResetStatistics()
     {
         ServedGuests = 0;

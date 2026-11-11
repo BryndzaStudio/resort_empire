@@ -56,7 +56,7 @@ public class BoatController : MonoBehaviour
     private bool running;
     // BRYN-52: ďalšia vlna bola spustená, kým loď ešte odchádzala z predošlej. Loď ju odplaví hneď potom.
     private bool waveQueued;
-    // Hostia, ktorých sme poslali. Loď len sleduje, či ešte existujú, hostia loď nevolajú.
+    // Hostia na móle. Po príchode pokračujú k budovám bez toho, aby blokovali loď.
     private readonly List<GuestController> guests = new List<GuestController>();
 
     private void Start()
@@ -198,7 +198,7 @@ public class BoatController : MonoBehaviour
         }
     }
 
-    // Pošle hostí jedného po druhom a počká, kým všetci zmiznú.
+    // Pošle hostí jedného po druhom a počká, kým všetci dokončia cestu po móle.
     // Sprity sa miešajú, takže v jednej skupine sa neopakuje ten istý hosť (kým sú k dispozícii).
     private IEnumerator SendGuests(int count, bool departing, float interval)
     {
@@ -216,7 +216,7 @@ public class BoatController : MonoBehaviour
             }
         }
 
-        while (AnyGuestAlive())
+        while (AnyGuestOnPier())
         {
             yield return null;
         }
@@ -248,10 +248,10 @@ public class BoatController : MonoBehaviour
 
     }
 
-    // Zničený hosť (už zmizol) sa zo zoznamu odstráni, Unity ho porovná s null.
-    private bool AnyGuestAlive()
+    // Obsluha v budovách pokračuje nezávisle od odplávania lode.
+    private bool AnyGuestOnPier()
     {
-        guests.RemoveAll(g => g == null);
+        guests.RemoveAll(g => g == null || g.HasFinishedPierJourney);
         return guests.Count > 0;
     }
 

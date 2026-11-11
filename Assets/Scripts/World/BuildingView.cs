@@ -30,6 +30,16 @@ public class BuildingView : MonoBehaviour
 
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
+    public BuildingState State => state;
+    public float ServiceSeconds { get; private set; } = 10f;
+    private Vector2 guestEntranceOffset;
+    private Vector2 guestQueueStep;
+    public Vector3 GuestEntrancePosition => transform.position + (Vector3)guestEntranceOffset;
+
+    public Vector3 GetQueuePosition(int index)
+    {
+        return GuestEntrancePosition + (Vector3)(guestQueueStep * (index + 1));
+    }
 
     private void Awake()
     {
@@ -39,7 +49,8 @@ public class BuildingView : MonoBehaviour
 
     // Nastaví budove obrázok a poradie vykresľovania.
     // badgeLocalPosition: vlastná pozícia odznaku pod budovou, null = automaticky nad budovou.
-    public void Setup(BuildingType type, Sprite sprite, Vector2? badgeLocalPosition = null)
+    public void Setup(BuildingType type, Sprite sprite, Vector2? badgeLocalPosition = null,
+        float serviceSeconds = 10f, Vector2? entranceOffset = null, Vector2? queueStep = null)
     {
         Type = type;
         spriteRenderer.sprite = sprite;
@@ -66,6 +77,10 @@ public class BuildingView : MonoBehaviour
         }
 
         state = GameManager.Instance.CurrentState.buildings.Find(b => b.type == type);
+        ServiceSeconds = serviceSeconds > 0f ? serviceSeconds : 10f;
+        guestEntranceOffset = entranceOffset ?? new Vector2(0f, 0.1f);
+        guestQueueStep = queueStep ?? new Vector2(1.25f, -0.65f);
+        if (GuestManager.Instance != null) GuestManager.Instance.RegisterBuilding(this);
         ShowCapacity();
     }
 
