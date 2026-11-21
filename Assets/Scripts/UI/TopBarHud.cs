@@ -11,19 +11,33 @@ public class TopBarHud : MonoBehaviour
     [SerializeField] private TMP_Text energyText;
     [SerializeField] private TMP_Text resortValueText;
 
+    // BRYN-16: forecast of the next wave, shown only while no wave is running.
+    [SerializeField] private GameObject forecastRoot;
+    [SerializeField] private TMP_Text forecastText;
+
     private static readonly NumberFormatInfo SpaceFormat = new NumberFormatInfo
     {
         NumberGroupSeparator = " ",
         NumberGroupSizes = new[] { 3 }
     };
 
+    // "Ďalšia vlna: " did not fit the 300x80 counter background legibly, so the label is short.
+    private const string ForecastLabel = "Vlna: ";
+
     private bool hasShown;
     private int lastCoins;
     private int lastEnergy;
     private int lastResortValue;
 
+    private bool forecastKnown;
+    private bool lastForecastVisible;
+    private int lastForecastGuests = -1;
+
     private void Update()
     {
+        // The forecast depends on WaveManager only, not on GameState.
+        UpdateForecast();
+
         // GameManager sets Instance in Awake; wait until the state exists.
         GameManager manager = GameManager.Instance;
         if (manager == null || manager.CurrentState == null)
@@ -52,6 +66,37 @@ public class TopBarHud : MonoBehaviour
         }
 
         hasShown = true;
+    }
+
+    // BRYN-16: "Ďalšia vlna: N hostí" while no wave runs; hidden during a wave
+    // or when there is no WaveManager in the scene. Touches the UI only on change.
+    private void UpdateForecast()
+    {
+        WaveManager wave = WaveManager.Instance;
+        bool visible = wave != null && !wave.IsWaveRunning;
+
+        if (forecastRoot != null && (!forecastKnown || visible != lastForecastVisible))
+        {
+            forecastRoot.SetActive(visible);
+        }
+
+        forecastKnown = true;
+        lastForecastVisible = visible;
+
+        if (!visible)
+        {
+            return;
+        }
+
+        int guests = wave.GuestsPerWave;
+        if (guests != lastForecastGuests)
+        {
+            lastForecastGuests = guests;
+            if (forecastText != null)
+            {
+                forecastText.text = ForecastLabel + Format(guests) + " hostí";
+            }
+        }
     }
 
     // 1250 -> "1 250"
