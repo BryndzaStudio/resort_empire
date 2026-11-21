@@ -35,6 +35,11 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     private int shownLevel = -1;
     private Vector2? customBadgePosition;
 
+    // BRYN-21: obrázok staveniska a zobrazený stav (-1 = ešte nič, 0 = stavenisko, 1 = hotová budova).
+    private Sprite constructionSprite;
+    private int shownActive = -1;
+    private bool flipSprite;
+
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
     public BuildingState State => state;
@@ -65,7 +70,8 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        if (state != null)
+        // Na stavenisko sa nedá ťuknúť (nemá ani oblasť ťuknutia).
+        if (state != null && state.isActive)
         {
             BuildingUpgradePanel.Instance.Show(state);
         }
@@ -88,11 +94,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     // badgeLocalPosition: vlastná pozícia odznaku pod budovou, null = automaticky nad budovou.
     public void Setup(BuildingType type, Sprite sprite, Vector2? badgeLocalPosition = null,
         float serviceSeconds = 10f, Vector2? entranceOffset = null, Vector2? queueStep = null,
-        Sprite[] sprites = null)
+        Sprite[] sprites = null, Sprite construction = null, bool flip = false)
     {
+        flipSprite = flip;
         Type = type;
-        spriteRenderer.sprite = sprite;
-        UpdateClickArea();
         name = "Building_" + type;
 
         // Izometria: čo je nižšie na obrazovke, je bližšie ku kamere,
@@ -100,19 +105,21 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         spriteRenderer.sortingOrder = -Mathf.RoundToInt(transform.position.y * 100);
 
         customBadgePosition = badgeLocalPosition;
-        PlaceBadge();
 
         state = GameManager.Instance.CurrentState.buildings.Find(b => b.type == type);
-        levelSprites = sprites;
-        shownLevel = state != null ? state.level : -1;
+        levelSprites = sprites != null && sprites.Length > 0 ? sprites : new[] { sprite };
+        constructionSprite = construction;
         ServiceSeconds = serviceSeconds > 0f ? serviceSeconds : 10f;
         guestEntranceOffset = entranceOffset ?? new Vector2(0f, 0.1f);
         guestQueueStep = queueStep ?? new Vector2(1.25f, -0.65f);
-        if (GuestManager.Instance != null) GuestManager.Instance.RegisterBuilding(this);
-        ShowCapacity();
+        if (state != null)
+        {
+            ShowVisual();
+            ShowCapacity();
+        }
     }
 
-    // Ak sa level, obsadené miesta alebo kapacita v stave hry zmenia, obrázok a text sa prepíšu sami.
+    // Ak sa isActive, level, obsadené miesta alebo kapacita v stave hry zmenia, obrázok a text sa prepíšu sami.
     private void Update()
     {
         if (state == null)
@@ -120,32 +127,53 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        if (state.level != shownLevel)
+        if (state.level != shownLevel || (state.isActive ? 1 : 0) != shownActive)
         {
-            ShowLevelSprite();
+            ShowVisual();
         }
 
-        if (state.capacity != shownCapacity || state.occupied != shownOccupied)
+        if (state.isActive && (state.capacity != shownCapacity || state.occupied != shownOccupied))
         {
             ShowCapacity();
         }
     }
 
-    // BRYN-25: Prepne obrázok budovy podľa jej levelu (level 1 = prvok 0). Mimo rozsahu sa vezme najbližší.
-    private void ShowLevelSprite()
+    // BRYN-21: Dokončená budova (isActive) sa zobrazí podľa levelu (BRYN-25), nedokončená ako stavenisko.
+    // Stavenisko nemá odznak s kapacitou ani oblasť ťuknutia a nie je zaregistrované u hostí.
+    private void ShowVisual()
     {
+        bool active = state.isActive;
+        shownActive = active ? 1 : 0;
         shownLevel = state.level;
-        if (levelSprites == null || levelSprites.Length == 0)
+
+        Sprite sprite = active ? LevelSprite() : constructionSprite;
+        spriteRenderer.sprite = sprite;
+        // Zrkadlí sa len hotová budova, stavenisko ostáva v pôvodnom smere.
+        spriteRenderer.flipX = active && flipSprite;
+        spriteRenderer.enabled = sprite != null;
+        clickArea.enabled = active && sprite != null;
+        badge.gameObject.SetActive(active);
+        capacityText.gameObject.SetActive(active);
+
+        if (sprite != null)
         {
-            return;
+            UpdateClickArea();
+
+            // Obrázky majú rôznu veľkosť, preto sa odznak nad budovou musí prepočítať.
+            PlaceBadge();
         }
 
-        int index = Mathf.Clamp(shownLevel - 1, 0, levelSprites.Length - 1);
-        spriteRenderer.sprite = levelSprites[index];
-        UpdateClickArea();
+        if (active && GuestManager.Instance != null)
+        {
+            GuestManager.Instance.RegisterBuilding(this);
+        }
+    }
 
-        // Obrázky majú rôznu veľkosť, preto sa odznak nad budovou musí prepočítať.
-        PlaceBadge();
+    // BRYN-25: obrázok podľa levelu (level 1 = prvok 0). Mimo rozsahu sa vezme najbližší.
+    private Sprite LevelSprite()
+    {
+        int index = Mathf.Clamp(state.level - 1, 0, levelSprites.Length - 1);
+        return levelSprites[index];
     }
 
     // Umiestni odznak s číslom: na pozíciu z Inspectora (IslandView), inak nad vrch obrázka budovy.

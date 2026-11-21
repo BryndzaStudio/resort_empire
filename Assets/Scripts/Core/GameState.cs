@@ -29,5 +29,26 @@ public class GameState
 
         // BRYN-12: two workers are available when a new game starts.
         workerCount = 2;
+
+        // BRYN-21: ostatné budovy (bazén, bungalovy) ešte nie sú dokončené, zobrazia sa ako stavenisko.
+        EnsureAllBuildings();
+    }
+
+    // BRYN-21: doplní budovy, ktoré v zozname chýbajú (napr. starý save), ako nedokončené (isActive = false).
+    // Existujúce budovy sa nemenia.
+    public void EnsureAllBuildings()
+    {
+        if (buildings == null)
+        {
+            buildings = new List<BuildingState>();
+        }
+
+        foreach (BuildingType type in Enum.GetValues(typeof(BuildingType)))
+        {
+            if (!buildings.Exists(b => b.type == type))
+            {
+                buildings.Add(new BuildingState(type) { isActive = false });
+            }
+        }
     }
 }

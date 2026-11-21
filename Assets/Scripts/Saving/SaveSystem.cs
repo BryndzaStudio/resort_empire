@@ -37,6 +37,9 @@ public static class SaveSystem
         var state = new GameState(0, 0, 0);
         JsonUtility.FromJsonOverwrite(json, state);
 
+        // BRYN-21: budovy, ktoré starý save nepozná (bazén, bungalovy), sa doplnia ako stavenisko.
+        state.EnsureAllBuildings();
+
         // BRYN-28: kapacita sa počíta z levelu, tu už len ošetríme obsadené miesta.
         if (state.buildings != null)
         {
