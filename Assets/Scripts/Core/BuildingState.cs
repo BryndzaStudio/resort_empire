@@ -15,6 +15,9 @@ public class BuildingState
     // Hodnoty sa menia len tu.
     private static readonly int[] CapacityByLevel = { 3, 5, 7 };
 
+    // BRYN-24: Cena vylepšenia v minciach: level 1 -> 2 = 200, level 2 -> 3 = 500. Hodnoty sa menia len tu.
+    private static readonly int[] UpgradeCosts = { 200, 500 };
+
     public BuildingType type;
     public int level;
     public bool isActive;
@@ -37,6 +40,13 @@ public class BuildingState
     {
         int index = Math.Clamp(level - 1, 0, CapacityByLevel.Length - 1);
         return CapacityByLevel[index];
+    }
+
+    // Cena vylepšenia z daného levelu na ďalší. Vráti -1, ak je budova už na maximálnom leveli.
+    public static int UpgradeCost(int level)
+    {
+        int index = Math.Max(level, 1) - 1;
+        return index < UpgradeCosts.Length ? UpgradeCosts[index] : -1;
     }
 
     // Volá sa po načítaní savu. Hostia sa neukladajú, takže po načítaní v budove nikto nie je:

@@ -1,11 +1,12 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 // BRYN-19: Zobrazenie jednej budovy na ostrove.
 // Skript patrí na prefab Building, ktorý má komponent SpriteRenderer.
 // BRYN-29: Nad budovou sa zobrazuje počet miest (kapacita) na tmavom kruhu.
 [RequireComponent(typeof(SpriteRenderer))]
-public class BuildingView : MonoBehaviour
+public class BuildingView : MonoBehaviour, IPointerClickHandler
 {
     // Konštanty na ladenie (hodnoty sú vo world jednotkách, nezávislé od scale budovy).
     private const float CapacityFontSize = 10f;       // veľkosť textu (musí sa zmestiť "0/6" do kruhu)
@@ -22,6 +23,7 @@ public class BuildingView : MonoBehaviour
     private static Sprite circleSprite;
 
     private SpriteRenderer spriteRenderer;
+    private BoxCollider2D clickArea;
     private TextMeshPro capacityText;
     private Transform badge;
     private BuildingState state;
@@ -49,7 +51,37 @@ public class BuildingView : MonoBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        clickArea = gameObject.AddComponent<BoxCollider2D>();
         CreateCapacityBadge();
+    }
+
+    // BRYN-24: ťuknutie na budovu otvorí panel s vylepšením.
+    // Zachytáva ho Physics2DRaycaster na kamere (pridá ho BuildingUpgradePanel) a EventSystem z UIRoot.
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (BuildingUpgradePanel.Instance == null)
+        {
+            Debug.LogWarning("BuildingView: V scéne chýba objekt UpgradePanel s komponentom BuildingUpgradePanel.");
+            return;
+        }
+
+        if (state != null)
+        {
+            BuildingUpgradePanel.Instance.Show(state);
+        }
+    }
+
+    // Oblasť ťuknutia = obrázok budovy. Prepočíta sa pri každej zmene obrázka.
+    private void UpdateClickArea()
+    {
+        Sprite sprite = spriteRenderer.sprite;
+        if (sprite == null)
+        {
+            return;
+        }
+
+        clickArea.size = sprite.bounds.size;
+        clickArea.offset = sprite.bounds.center;
     }
 
     // Nastaví budove obrázok a poradie vykresľovania.
@@ -60,6 +92,7 @@ public class BuildingView : MonoBehaviour
     {
         Type = type;
         spriteRenderer.sprite = sprite;
+        UpdateClickArea();
         name = "Building_" + type;
 
         // Izometria: čo je nižšie na obrazovke, je bližšie ku kamere,
@@ -109,6 +142,7 @@ public class BuildingView : MonoBehaviour
 
         int index = Mathf.Clamp(shownLevel - 1, 0, levelSprites.Length - 1);
         spriteRenderer.sprite = levelSprites[index];
+        UpdateClickArea();
 
         // Obrázky majú rôznu veľkosť, preto sa odznak nad budovou musí prepočítať.
         PlaceBadge();
