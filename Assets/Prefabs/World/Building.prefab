@@ -104,3 +104,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4e905e4b6d24fa4aa78e9e2d1e5dfc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingView
+  workerBadgeSprite: {fileID: 21300000, guid: 53da44f0369fbde499f09d444c61011a, type: 3}
