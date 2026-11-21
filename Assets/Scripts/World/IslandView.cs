@@ -19,6 +19,13 @@ public class IslandView : MonoBehaviour
         // Obrázky podľa levelu: prvok 0 = lv1, prvok 1 = lv2, prvok 2 = lv3.
         public Sprite[] levelSprites;
 
+        // BRYN-21: obrázok staveniska, kým budova nie je dokončená (isActive = false).
+        // Ak je prázdny, nedokončená budova sa nezobrazí vôbec.
+        public Sprite constructionSprite;
+
+        // Zrkadlovo otočí obrázok budovy (aj staveniska) zľava doprava.
+        public bool flipX;
+
         // BRYN-64/67: basic service time and guest positions for this building.
         [Min(0.1f)] public float serviceSeconds = 10f;
         [Tooltip("Guest entrance offset from the building anchor, in world units.")]
@@ -63,12 +70,8 @@ public class IslandView : MonoBehaviour
 
         foreach (BuildingState building in GameManager.Instance.CurrentState.buildings)
         {
-            // Neaktívne budovy (napr. ešte nepostavené) nezobrazujeme.
-            if (!building.isActive)
-            {
-                continue;
-            }
-
+            // Nedokončené budovy (isActive = false) zobrazí BuildingView ako stavenisko
+            // a po dokončení sa samy prepnú na hotovú budovu.
             BuildingSlot slot = slots.Find(s => s.type == building.type);
             if (slot == null || slot.anchor == null)
             {
@@ -86,7 +89,7 @@ public class IslandView : MonoBehaviour
             BuildingView view = Instantiate(buildingPrefab, slot.anchor.position, Quaternion.identity, slot.anchor);
             Vector2? badgePosition = slot.useCustomBadgePosition ? slot.badgeLocalPosition : (Vector2?)null;
             view.Setup(building.type, sprite, badgePosition,
-                slot.serviceSeconds, slot.guestEntranceOffset, slot.guestQueueStep, slot.levelSprites);
+                slot.serviceSeconds, slot.guestEntranceOffset, slot.guestQueueStep, slot.levelSprites, slot.constructionSprite, slot.flipX);
             spawnedBuildings.Add(view);
         }
     }

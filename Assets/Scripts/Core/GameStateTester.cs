@@ -39,6 +39,19 @@ public class GameStateTester : MonoBehaviour
             Debug.Log("Changed level of all buildings.");
         }
 
+        // BRYN-21: testovanie staveniska: B prepne bazén a bungalovy medzi stavenisko a hotovú budovu.
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            foreach (var building in GameManager.Instance.CurrentState.buildings)
+            {
+                if (building.type == BuildingType.Pool || building.type == BuildingType.Bungalows)
+                {
+                    building.isActive = !building.isActive;
+                }
+            }
+            Debug.Log("Toggled pool and bungalows.");
+        }
+
         if (Input.GetKeyDown(KeyCode.P))
         {
             var state = GameManager.Instance.CurrentState;
