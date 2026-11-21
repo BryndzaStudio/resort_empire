@@ -34,6 +34,35 @@ public class GameState
         EnsureAllBuildings();
     }
 
+    // BRYN-22: Je budova obsluhovaná? Jednoduché pravidlo: pracovníci (workerCount) obsluhujú prvé
+    // aktívne budovy v poradí zoznamu. Stavenisko (isActive = false) pracovníka nepotrebuje.
+    // Keď pribudne skutočné priraďovanie pracovníkov, stačí nahradiť túto metódu.
+    public bool IsStaffed(BuildingState building)
+    {
+        if (building == null || !building.isActive)
+        {
+            return false;
+        }
+
+        int staffed = 0;
+        foreach (BuildingState other in buildings)
+        {
+            if (!other.isActive)
+            {
+                continue;
+            }
+
+            if (other == building)
+            {
+                return staffed < workerCount;
+            }
+
+            staffed++;
+        }
+
+        return false;
+    }
+
     // BRYN-21: doplní budovy, ktoré v zozname chýbajú (napr. starý save), ako nedokončené (isActive = false).
     // Existujúce budovy sa nemenia.
     public void EnsureAllBuildings()

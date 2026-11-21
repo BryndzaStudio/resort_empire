@@ -52,6 +52,14 @@ public class GameStateTester : MonoBehaviour
             Debug.Log("Toggled pool and bungalows.");
         }
 
+        // BRYN-22: testovanie obsluhy: W zvýši počet pracovníkov (po 5 sa vráti na 0).
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            var state = GameManager.Instance.CurrentState;
+            state.workerCount = (state.workerCount + 1) % 6;
+            Debug.Log($"Workers: {state.workerCount}");
+        }
+
         if (Input.GetKeyDown(KeyCode.P))
         {
             var state = GameManager.Instance.CurrentState;
