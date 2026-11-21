@@ -37,7 +37,7 @@ public static class SaveSystem
         var state = new GameState(0, 0, 0);
         JsonUtility.FromJsonOverwrite(json, state);
 
-        // BRYN-29: budovy zo starého savu nemajú capacity (0), doplníme východiskovú hodnotu.
+        // BRYN-28: kapacita sa počíta z levelu, tu už len ošetríme obsadené miesta.
         if (state.buildings != null)
         {
             foreach (BuildingState building in state.buildings)

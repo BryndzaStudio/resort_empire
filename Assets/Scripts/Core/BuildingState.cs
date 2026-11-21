@@ -11,33 +11,38 @@ public enum BuildingType
 [Serializable]
 public class BuildingState
 {
-    // BRYN-29: Východisková kapacita (počet miest) novej budovy. Tu sa dá jednoducho zmeniť.
-    public const int DefaultCapacity = 6;
+    // BRYN-28: Počet miest podľa levelu budovy: level 1 = 3, level 2 = 5, level 3 = 7.
+    // Hodnoty sa menia len tu.
+    private static readonly int[] CapacityByLevel = { 3, 5, 7 };
 
     public BuildingType type;
     public int level;
     public bool isActive;
-    public int capacity;
     public int occupied;
+
+    // Kapacita sa počíta z levelu, preto sa neukladá do savu a nikdy nie je zastaralá
+    // (ani po zmene levelu alebo po načítaní starého savu). Ostatné skripty ju čítajú ako doteraz.
+    public int capacity => CapacityForLevel(level);
 
     public BuildingState(BuildingType type)
     {
         this.type = type;
         level = GameState.StartingBuildingLevel;
         isActive = true;
-        capacity = DefaultCapacity;
         occupied = 0;
     }
 
-    // Staré savy nemajú pole capacity (JSON ho načíta ako 0) – doplníme východiskovú hodnotu.
-    // Obsadené miesta nesmú byť záporné ani väčšie než kapacita. Chýbajúce occupied je 0.
+    // Kapacita pre daný level. Level mimo rozsahu (napr. 0 alebo 4) dostane najbližšiu hodnotu.
+    public static int CapacityForLevel(int level)
+    {
+        int index = Math.Clamp(level - 1, 0, CapacityByLevel.Length - 1);
+        return CapacityByLevel[index];
+    }
+
+    // Volá sa po načítaní savu. Hostia sa neukladajú, takže po načítaní v budove nikto nie je:
+    // obsadené miesta sa vynulujú (inak by zostali "obsadené" z minulej hry a nik by ich neuvoľnil).
     public void EnsureCapacity()
     {
-        if (capacity <= 0)
-        {
-            capacity = DefaultCapacity;
-        }
-
-        occupied = Math.Clamp(occupied, 0, capacity);
+        occupied = 0;
     }
 }
