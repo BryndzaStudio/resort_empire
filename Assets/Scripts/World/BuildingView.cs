@@ -40,9 +40,15 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     private int shownActive = -1;
     private bool flipSprite;
 
-    // BRYN-22: budova bez obsluhy je stmavená (shownDimmed: -1 = ešte nič, 0 = normálna, 1 = stmavená).
-    private static readonly Color UnstaffedColor = new Color(0.45f, 0.45f, 0.5f, 1f);
-    private int shownDimmed = -1;
+    // BRYN-22: obsluha budovy sa ukazuje odznakom s pracovníkom vľavo od čísla kapacity.
+    // Obsluhovaná budova ho má farebný, budova bez obsluhy tmavý (prázdne miesto). Samotná budova sa nemení.
+    // Obrázok sa priraďuje v prefabe Building (badge_worker z Assets/Art/ui).
+    [SerializeField] private Sprite workerBadgeSprite;
+    private const float WorkerBadgeDiameter = 1.6f;                       // priemer odznaku s pracovníkom
+    private static readonly Vector2 WorkerBadgeOffset = new Vector2(-1.95f, 0f); // posun od odznaku s kapacitou
+    private static readonly Color NoWorkerColor = new Color(0.2f, 0.2f, 0.2f, 0.7f);
+    private SpriteRenderer workerBadge;
+    private int shownStaffed = -1;
 
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
@@ -144,24 +150,24 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         UpdateStaffedLook();
     }
 
-    // BRYN-22: Dokončená budova bez obsluhy je stmavená, obsluhovaná aj stavenisko majú normálnu farbu.
+    // BRYN-22: Odznak s pracovníkom je farebný, ak je budova obsluhovaná, inak tmavý.
     private void UpdateStaffedLook()
     {
         GameManager manager = GameManager.Instance;
-        if (manager == null || manager.CurrentState == null)
+        if (workerBadge == null || manager == null || manager.CurrentState == null)
         {
             return;
         }
 
-        bool dimmed = state.isActive && !manager.CurrentState.IsStaffed(state);
-        int value = dimmed ? 1 : 0;
-        if (value == shownDimmed)
+        bool staffed = state.isActive && manager.CurrentState.IsStaffed(state);
+        int value = staffed ? 1 : 0;
+        if (value == shownStaffed)
         {
             return;
         }
 
-        shownDimmed = value;
-        spriteRenderer.color = dimmed ? UnstaffedColor : Color.white;
+        shownStaffed = value;
+        workerBadge.color = staffed ? Color.white : NoWorkerColor;
     }
 
     // BRYN-21: Dokončená budova (isActive) sa zobrazí podľa levelu (BRYN-25), nedokončená ako stavenisko.
@@ -180,6 +186,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         clickArea.enabled = active && sprite != null;
         badge.gameObject.SetActive(active);
         capacityText.gameObject.SetActive(active);
+        if (workerBadge != null)
+        {
+            workerBadge.gameObject.SetActive(active);
+        }
 
         if (sprite != null)
         {
@@ -217,6 +227,12 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
             Vector3 badgePosition = new Vector3(bounds.center.x, bounds.max.y + CapacityOffsetY, transform.position.z);
             badge.position = badgePosition;
             capacityText.transform.position = badgePosition;
+        }
+
+        // Odznak s pracovníkom je vždy vedľa odznaku s kapacitou.
+        if (workerBadge != null)
+        {
+            workerBadge.transform.position = badge.position + (Vector3)WorkerBadgeOffset;
         }
     }
 
@@ -263,6 +279,18 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         capacityText.outlineWidth = OutlineWidth;
         capacityText.outlineColor = Color.black;
         capacityText.sortingOrder = TextSortingOrder;
+
+        // BRYN-22: odznak s pracovníkom (len ak je priradený obrázok).
+        if (workerBadgeSprite != null)
+        {
+            GameObject workerObject = new GameObject("WorkerBadge");
+            workerObject.transform.SetParent(transform, false);
+            workerObject.transform.localScale = compensation * (WorkerBadgeDiameter / workerBadgeSprite.bounds.size.x);
+
+            workerBadge = workerObject.AddComponent<SpriteRenderer>();
+            workerBadge.sprite = workerBadgeSprite;
+            workerBadge.sortingOrder = BadgeSortingOrder;
+        }
     }
 
     // Jednoduchý biely kruh s vyhladenou hranou, veľký presne 1 jednotku.

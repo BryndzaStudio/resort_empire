@@ -27,8 +27,8 @@ public class GameState
             new BuildingState(BuildingType.Reception)
         };
 
-        // BRYN-12: two workers are available when a new game starts.
-        workerCount = 2;
+        // BRYN-12: na začiatku hry je k dispozícii jeden pracovník.
+        workerCount = 1;
 
         // BRYN-21: ostatné budovy (bazén, bungalovy) ešte nie sú dokončené, zobrazia sa ako stavenisko.
         EnsureAllBuildings();
