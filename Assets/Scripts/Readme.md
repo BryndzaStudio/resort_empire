@@ -48,6 +48,14 @@ Click inside the Game view before using the controls.
 - Add the prefab as a child of `UIRoot` (Canvas). It does not block clicks (`raycastTarget` is off).
 - To test it, add `GameManager` and `GameStateTester` to the scene and press `C` / `E` (see Debug controls).
 
+### Wave forecast (BRYN-16)
+
+- `WaveForecast` in `TopBarHud.prefab` sits under the counters (same `top_bar_counter` background, 300x80, TMP text, `raycastTarget` off). It shows `Vlna: N hostí`, where N = `WaveManager.Instance.GuestsPerWave`. Guest needs are drawn on arrival, so they are not part of the forecast. The label is short because `Ďalšia vlna: N hostí` did not fit the sprite legibly (it has no 9-slice border, so the background is not widened).
+- It is visible while `WaveManager.IsWaveRunning` is false (before the first wave and after a wave) and hidden during a wave. It is also hidden when there is no `WaveManager` in the scene.
+- `TopBarHud.UpdateForecast` polls in `Update` and touches the UI only when the visibility or `GuestsPerWave` changes (no per-frame allocations). The fields are `forecastRoot` and `forecastText`.
+- `IsWaveRunning` turns false in `WaveManager.FinishWave`, so the forecast reappears when the result screen opens (behind its overlay), not after `Pokračovať`.
+- Neither `StartWaveButton` nor `WaveManager` was changed.
+
 ## Start Wave button (BRYN-48)
 
 - `Assets/Prefabs/UI/StartWaveButton.prefab` is a full-screen container with `SafeAreaFitter`; the button (`btn_start_wave`) sits bottom right. The sprite has no text, so the "Start Wave" label is a TMP child.
