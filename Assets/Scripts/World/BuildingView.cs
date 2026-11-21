@@ -40,6 +40,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     private int shownActive = -1;
     private bool flipSprite;
 
+    // BRYN-22: budova bez obsluhy je stmavená (shownDimmed: -1 = ešte nič, 0 = normálna, 1 = stmavená).
+    private static readonly Color UnstaffedColor = new Color(0.45f, 0.45f, 0.5f, 1f);
+    private int shownDimmed = -1;
+
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
     public BuildingState State => state;
@@ -136,6 +140,28 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         {
             ShowCapacity();
         }
+
+        UpdateStaffedLook();
+    }
+
+    // BRYN-22: Dokončená budova bez obsluhy je stmavená, obsluhovaná aj stavenisko majú normálnu farbu.
+    private void UpdateStaffedLook()
+    {
+        GameManager manager = GameManager.Instance;
+        if (manager == null || manager.CurrentState == null)
+        {
+            return;
+        }
+
+        bool dimmed = state.isActive && !manager.CurrentState.IsStaffed(state);
+        int value = dimmed ? 1 : 0;
+        if (value == shownDimmed)
+        {
+            return;
+        }
+
+        shownDimmed = value;
+        spriteRenderer.color = dimmed ? UnstaffedColor : Color.white;
     }
 
     // BRYN-21: Dokončená budova (isActive) sa zobrazí podľa levelu (BRYN-25), nedokončená ako stavenisko.
