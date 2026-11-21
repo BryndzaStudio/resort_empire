@@ -29,6 +29,16 @@ public class GameStateTester : MonoBehaviour
             Debug.Log("Saved game manually.");
         }
 
+        // BRYN-25: testovanie vizuálneho progresu: L zvýši level všetkých budov (3 sa vráti na 1).
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            foreach (var building in GameManager.Instance.CurrentState.buildings)
+            {
+                building.level = building.level % 3 + 1;
+            }
+            Debug.Log("Changed level of all buildings.");
+        }
+
         if (Input.GetKeyDown(KeyCode.P))
         {
             var state = GameManager.Instance.CurrentState;

@@ -28,6 +28,11 @@ public class BuildingView : MonoBehaviour
     private int shownCapacity = -1;
     private int shownOccupied = -1;
 
+    // BRYN-25: obrázky podľa levelu (lv1, lv2, lv3) a level, ktorý je práve zobrazený.
+    private Sprite[] levelSprites;
+    private int shownLevel = -1;
+    private Vector2? customBadgePosition;
+
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
     public BuildingState State => state;
@@ -50,7 +55,8 @@ public class BuildingView : MonoBehaviour
     // Nastaví budove obrázok a poradie vykresľovania.
     // badgeLocalPosition: vlastná pozícia odznaku pod budovou, null = automaticky nad budovou.
     public void Setup(BuildingType type, Sprite sprite, Vector2? badgeLocalPosition = null,
-        float serviceSeconds = 10f, Vector2? entranceOffset = null, Vector2? queueStep = null)
+        float serviceSeconds = 10f, Vector2? entranceOffset = null, Vector2? queueStep = null,
+        Sprite[] sprites = null)
     {
         Type = type;
         spriteRenderer.sprite = sprite;
@@ -60,23 +66,12 @@ public class BuildingView : MonoBehaviour
         // preto sa musí kresliť navrch (vyššie sortingOrder).
         spriteRenderer.sortingOrder = -Mathf.RoundToInt(transform.position.y * 100);
 
-        if (badgeLocalPosition.HasValue)
-        {
-            // Pozícia nastavená v Inspectore (IslandView, slot budovy).
-            Vector3 localPosition = badgeLocalPosition.Value;
-            badge.localPosition = localPosition;
-            capacityText.transform.localPosition = localPosition;
-        }
-        else
-        {
-            // Kruh s číslom dáme nad vrch obrázka budovy.
-            Bounds bounds = spriteRenderer.bounds;
-            Vector3 badgePosition = new Vector3(bounds.center.x, bounds.max.y + CapacityOffsetY, transform.position.z);
-            badge.position = badgePosition;
-            capacityText.transform.position = badgePosition;
-        }
+        customBadgePosition = badgeLocalPosition;
+        PlaceBadge();
 
         state = GameManager.Instance.CurrentState.buildings.Find(b => b.type == type);
+        levelSprites = sprites;
+        shownLevel = state != null ? state.level : -1;
         ServiceSeconds = serviceSeconds > 0f ? serviceSeconds : 10f;
         guestEntranceOffset = entranceOffset ?? new Vector2(0f, 0.1f);
         guestQueueStep = queueStep ?? new Vector2(1.25f, -0.65f);
@@ -84,12 +79,56 @@ public class BuildingView : MonoBehaviour
         ShowCapacity();
     }
 
-    // Ak sa obsadené miesta alebo kapacita v stave hry zmenia, text sa prepíše sám.
+    // Ak sa level, obsadené miesta alebo kapacita v stave hry zmenia, obrázok a text sa prepíšu sami.
     private void Update()
     {
-        if (state != null && (state.capacity != shownCapacity || state.occupied != shownOccupied))
+        if (state == null)
+        {
+            return;
+        }
+
+        if (state.level != shownLevel)
+        {
+            ShowLevelSprite();
+        }
+
+        if (state.capacity != shownCapacity || state.occupied != shownOccupied)
         {
             ShowCapacity();
+        }
+    }
+
+    // BRYN-25: Prepne obrázok budovy podľa jej levelu (level 1 = prvok 0). Mimo rozsahu sa vezme najbližší.
+    private void ShowLevelSprite()
+    {
+        shownLevel = state.level;
+        if (levelSprites == null || levelSprites.Length == 0)
+        {
+            return;
+        }
+
+        int index = Mathf.Clamp(shownLevel - 1, 0, levelSprites.Length - 1);
+        spriteRenderer.sprite = levelSprites[index];
+
+        // Obrázky majú rôznu veľkosť, preto sa odznak nad budovou musí prepočítať.
+        PlaceBadge();
+    }
+
+    // Umiestni odznak s číslom: na pozíciu z Inspectora (IslandView), inak nad vrch obrázka budovy.
+    private void PlaceBadge()
+    {
+        if (customBadgePosition.HasValue)
+        {
+            Vector3 localPosition = customBadgePosition.Value;
+            badge.localPosition = localPosition;
+            capacityText.transform.localPosition = localPosition;
+        }
+        else
+        {
+            Bounds bounds = spriteRenderer.bounds;
+            Vector3 badgePosition = new Vector3(bounds.center.x, bounds.max.y + CapacityOffsetY, transform.position.z);
+            badge.position = badgePosition;
+            capacityText.transform.position = badgePosition;
         }
     }
 
