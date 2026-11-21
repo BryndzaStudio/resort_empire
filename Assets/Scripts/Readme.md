@@ -97,6 +97,10 @@ Click inside the Game view before using the controls.
 - `BoatController` waits only for guests to finish the pier journey, so building queues do not hold the boat at the dock. Assignment happens before the arrival event, including for the final guest of a wave.
 - Destroying a guest releases its reservation or removes it from the queue without counting it as served. Disabling `GuestManager` clears its own visits and reservations.
 
+## Building info panel (BRYN-112)
+
+- `BuildingUpgradePanel` po ťuknutí na budovu ukazuje jej level, kapacitu a personál ("obsluhovaná" / "bez obsluhy" podľa `GameState.IsStaffed`), aj na maximálnom leveli.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.

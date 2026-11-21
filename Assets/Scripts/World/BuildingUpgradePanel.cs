@@ -95,17 +95,24 @@ public class BuildingUpgradePanel : MonoBehaviour
         int cost = BuildingState.UpgradeCost(building.level);
         bool canUpgrade = CanUpgrade(out string reason);
 
+        // BRYN-112: personál budovy (obsluhovaná / bez obsluhy) ako tretí riadok.
+        string staff = GameManager.Instance.CurrentState.IsStaffed(building) ? "Personál: obsluhovaná" : "Personál: bez obsluhy";
+
+        // Na maxime nie je cena ani minca, preto text tlačidla zaberie celú šírku (inak pôvodné ukotvenie 0.05 - 0.55).
+        RectTransform buttonTextRect = (RectTransform)buttonText.transform;
+        buttonTextRect.anchorMax = new Vector2(cost < 0 ? 0.95f : 0.55f, buttonTextRect.anchorMax.y);
+
         titleText.text = DisplayName(building.type);
         if (cost < 0)
         {
-            infoText.text = $"Level {building.level} (maximum)\nMiesta: {building.capacity}";
+            infoText.text = $"Level {building.level} (maximum)\nMiesta: {building.capacity}\n{staff}";
             buttonText.text = "Maximum";
             costText.text = "";
         }
         else
         {
             int next = building.level + 1;
-            infoText.text = $"Level {building.level} -> {next}\nMiesta: {building.capacity} -> {BuildingState.CapacityForLevel(next)}";
+            infoText.text = $"Level {building.level} -> {next}\nMiesta: {building.capacity} -> {BuildingState.CapacityForLevel(next)}\n{staff}";
             buttonText.text = "Upgrade";
             costText.text = TopBarHud.Format(cost);
         }
