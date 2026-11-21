@@ -86,7 +86,7 @@ public class IslandView : MonoBehaviour
             BuildingView view = Instantiate(buildingPrefab, slot.anchor.position, Quaternion.identity, slot.anchor);
             Vector2? badgePosition = slot.useCustomBadgePosition ? slot.badgeLocalPosition : (Vector2?)null;
             view.Setup(building.type, sprite, badgePosition,
-                slot.serviceSeconds, slot.guestEntranceOffset, slot.guestQueueStep);
+                slot.serviceSeconds, slot.guestEntranceOffset, slot.guestQueueStep, slot.levelSprites);
             spawnedBuildings.Add(view);
         }
     }
