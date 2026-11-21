@@ -35,6 +35,8 @@ Transform:
   - {fileID: 4730202009570873428}
   - {fileID: 7210513391828402780}
   - {fileID: 2051572712239259491}
+  - {fileID: 2027823475663474872}
+  - {fileID: 3988936096509613069}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8376475331743483964
@@ -79,6 +81,31 @@ MonoBehaviour:
     - {fileID: 21300000, guid: d641774337deb91479688a278844b0e7, type: 3}
     - {fileID: 21300000, guid: 8af7d4802e904e64a98c5b855d1f83b5, type: 3}
     - {fileID: 21300000, guid: cf3a7e0cc565d6540983b72a54707282, type: 3}
+    serviceSeconds: 10
+    guestEntranceOffset: {x: 0, y: 0.1}
+    guestQueueStep: {x: 1.25, y: -0.65}
+    useCustomBadgePosition: 0
+    badgeLocalPosition: {x: 0, y: 0}
+  - type: 3
+    anchor: {fileID: 2027823475663474872}
+    levelSprites:
+    - {fileID: 21300000, guid: 82b56eb90fbab1342866d1e5fd17ac7b, type: 3}
+    - {fileID: 21300000, guid: e25649d021b4d2140bf2045ebe95b1be, type: 3}
+    - {fileID: 21300000, guid: fda81befec5cf504c83bd63b3d45dc8b, type: 3}
+    constructionSprite: {fileID: 21300000, guid: c850292d80cf02d4ea21ff179c5c321a, type: 3}
+    serviceSeconds: 10
+    guestEntranceOffset: {x: 0, y: 0.1}
+    guestQueueStep: {x: 1.25, y: -0.65}
+    useCustomBadgePosition: 0
+    badgeLocalPosition: {x: 0, y: 0}
+  - type: 4
+    anchor: {fileID: 3988936096509613069}
+    levelSprites:
+    - {fileID: 21300000, guid: f30d2908a85ce2540b07908ca4220eab, type: 3}
+    - {fileID: 21300000, guid: 916190ca3405c8946a444ded8043c740, type: 3}
+    - {fileID: 21300000, guid: 92d963662ee712e438baab3f103c4bc5, type: 3}
+    constructionSprite: {fileID: 21300000, guid: 47ad8faebb13b224eae2089a0ac96456, type: 3}
+    flipX: 1
     serviceSeconds: 10
     guestEntranceOffset: {x: 0, y: 0.1}
     guestQueueStep: {x: 1.25, y: -0.65}
@@ -1467,3 +1494,65 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4344597551944115422, guid: bae6eebe2d6c4945bc2dd4276b491e18, type: 3}
   m_PrefabInstance: {fileID: 4513257687568468929}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2027655471468650759
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2027823475663474872}
+  m_Layer: 0
+  m_Name: Anchor_Pool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2027823475663474872
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2027655471468650759}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.2, y: 2.8, z: 0}
+  m_LocalScale: {x: 1, y: 0.8, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6005684884019071965}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1397069015038909239
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3988936096509613069}
+  m_Layer: 0
+  m_Name: Anchor_Bungalows
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3988936096509613069
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397069015038909239}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 20.5, y: -1.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6005684884019071965}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
