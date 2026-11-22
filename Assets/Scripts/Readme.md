@@ -109,6 +109,20 @@ Click inside the Game view before using the controls.
 
 - `BuildingUpgradePanel` po ťuknutí na budovu ukazuje jej level, kapacitu a personál ("obsluhovaná" / "bez obsluhy" podľa `GameState.IsStaffed`), aj na maximálnom leveli.
 
+## Settings (BRYN-18)
+
+- Tlačidlo `Nastavenia` (`SettingsButton`) je v `TopBarHud.prefab` vpravo hore, mimo `Bars`. Ikona zatiaľ nie je, preto je tam sprite `btn_secondary` s TMP textom. Výmena za ikonu = zmeniť sprite v `Image` a vypnúť/zmeniť text `Label`.
+- `Assets/Prefabs/UI/SettingsPanel.prefab` má vlastný Canvas (Overlay, `sortingOrder` 200, nad `BuildingUpgradePanel` so 100). `SettingsButton` ho vytvorí z prefabu (serialized `Panel Prefab`, bez `Resources.Load`) pri prvom otvorení, potom ho len zapína a vypína. Stmavené pozadie zachytáva kliky (nedá sa ťuknúť na budovy) a ťuknutím naň sa panel zavrie. Hra pod panelom beží ďalej.
+- Panel má dva nezávislé prepínače: `Zvuky` a `Hudba` (zapnuté = `state_ok`, vypnuté = stlmený obrázok a text `Vyp`).
+- `GameAudioSettings` (statická trieda) drží `SoundMuted` a `MusicMuted` a udalosť `Changed`. Ukladá sa cez `PlayerPrefs` (`settings.soundMuted`, `settings.musicMuted`) pri každej zmene, nie do `GameState` ani `resort_save.json`. Názov nie je `AudioSettings`, lebo ten patrí Unity.
+- Projekt zatiaľ neobsahuje žiadny zvuk ani audio súbory. Pridané je len nastavenie a napojenie.
+
+### Ako napojiť vlastný zvuk
+1. Pridaj `AudioSource` s tvojím zvukom alebo hudbou.
+2. Pridaj na ten istý objekt komponent `AudioChannel` a vyber `Channel`: `Sound` (efekty) alebo `Music` (hudba).
+3. Hotovo: `AudioChannel` nastaví `AudioSource.mute` pri zapnutí objektu aj pri zmene nastavenia za behu. Na tom istom `AudioSource` nenastavuj `mute` sám, prepísalo by sa.
+4. Ak zvuk púšťaš cez `AudioSource.PlayClipAtPoint` alebo vytváraš `AudioSource` v kóde, pridaj `AudioChannel` aj tam (`gameObject.AddComponent<AudioChannel>().Kind = AudioChannel.Channel.Sound`), alebo si pozri `GameAudioSettings.SoundMuted` pred prehraním.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
