@@ -17,6 +17,12 @@ public class BuildingUpgradePanel : MonoBehaviour
     [SerializeField] private Sprite closeSprite;   // btn_close
     [SerializeField] private Sprite coinSprite;    // icon_coin (Assets/Art/horny-panel), zobrazí sa pri cene
 
+    // BRYN-27: sprity využíva aj BuildingUnlockPanel.
+    public Sprite PanelSprite => panelSprite;
+    public Sprite ButtonSprite => buttonSprite;
+    public Sprite CloseSprite => closeSprite;
+    public Sprite CoinSprite => coinSprite;
+
     // Vzhľad na ladenie (referenčné rozlíšenie 1920x1080).
     private static readonly Vector2 PanelSize = new Vector2(520f, 663f);
     private static readonly Color TextColor = new Color(0.35f, 0.2f, 0.08f);
