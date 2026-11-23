@@ -80,10 +80,14 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        // Na stavenisko sa nedá ťuknúť (nemá ani oblasť ťuknutia).
         if (state != null && state.isActive)
         {
             BuildingUpgradePanel.Instance.Show(state);
+        }
+        else
+        {
+            // BRYN-26/27: ťuknutie na stavenisko otvorí panel na odomknutie budovy.
+            BuildingUnlockPanel.Show(state);
         }
     }
 
@@ -171,7 +175,7 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     }
 
     // BRYN-21: Dokončená budova (isActive) sa zobrazí podľa levelu (BRYN-25), nedokončená ako stavenisko.
-    // Stavenisko nemá odznak s kapacitou ani oblasť ťuknutia a nie je zaregistrované u hostí.
+    // Stavenisko nemá odznak s kapacitou a nie je zaregistrované u hostí; ťuknutím sa otvorí odomknutie (BRYN-26).
     private void ShowVisual()
     {
         bool active = state.isActive;
@@ -183,7 +187,7 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         // Zrkadlí sa len hotová budova, stavenisko ostáva v pôvodnom smere.
         spriteRenderer.flipX = active && flipSprite;
         spriteRenderer.enabled = sprite != null;
-        clickArea.enabled = active && sprite != null;
+        clickArea.enabled = sprite != null; // BRYN-26: ťuknúť sa dá aj na stavenisko
         badge.gameObject.SetActive(active);
         capacityText.gameObject.SetActive(active);
         if (workerBadge != null)

@@ -60,6 +60,14 @@ public class GameStateTester : MonoBehaviour
             Debug.Log($"Workers: {state.workerCount}");
         }
 
+        // BRYN-26: dočasné testovanie odomykania: N pridá jednu dokončenú vlnu.
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            var state = GameManager.Instance.CurrentState;
+            state.wavesCompleted++;
+            Debug.Log($"Waves completed: {state.wavesCompleted}");
+        }
+
         if (Input.GetKeyDown(KeyCode.P))
         {
             var state = GameManager.Instance.CurrentState;
@@ -68,7 +76,8 @@ public class GameStateTester : MonoBehaviour
                 $"Coins: {state.coins}, " +
                 $"Energy: {state.energy}, " +
                 $"Resort Value: {state.resortValue}, " +
-                $"Workers: {state.workerCount}"
+                $"Workers: {state.workerCount}, " +
+                $"Waves completed: {state.wavesCompleted}"
             );
 
             foreach (var building in state.buildings)

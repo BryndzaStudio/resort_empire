@@ -13,6 +13,9 @@ public class GameState
     public List<BuildingState> buildings;
     public int workerCount;
 
+    // BRYN-26: počet dokončených vĺn (míľnik na odomknutie budov). Starý save ho nemá, preto začína na 0.
+    public int wavesCompleted;
+
     public GameState(int startingCoins, int startingEnergy, int startingResortValue)
     {
         coins = startingCoins;

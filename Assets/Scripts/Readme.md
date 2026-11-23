@@ -18,6 +18,7 @@ These controls work while the game is running in Unity Play mode, provided the `
 | C   | Add 100 coins                                     |
 | E   | Remove 10 energy                                  |
 | S   | Save the current game state                       |
+| N   | Add one completed wave (temporary, BRYN-26)       |
 | P   | Print the current game state in the Unity Console |
 
 Click inside the Game view before using the controls.
@@ -108,6 +109,16 @@ Click inside the Game view before using the controls.
 ## Building info panel (BRYN-112)
 
 - `BuildingUpgradePanel` po ťuknutí na budovu ukazuje jej level, kapacitu a personál ("obsluhovaná" / "bez obsluhy" podľa `GameState.IsStaffed`), aj na maximálnom leveli.
+
+## Odomknutie budov (BRYN-26, BRYN-27)
+
+- Pool a Bungalows sú na začiatku stavenisko (`isActive = false`). Míľnik je počet dokončených vĺn: `GameState.wavesCompleted` (ukladá sa do `resort_save.json`, starý save ho má 0).
+- Vlny aj ceny sú na jednom mieste, v `BuildingState.Unlocks`: Pool po 3. vlne za 500 mincí, Bungalows po 6. vlne za 1 000 mincí (ceny sú dočasné). Čítajú sa cez `BuildingState.UnlockWave(type)` a `UnlockCost(type)`, ktoré vrátia `-1` pre budovy, ktoré sa neodomykajú.
+- `WaveProgressTracker` sa vytvorí sám pri štarte hry (`RuntimeInitializeOnLoadMethod`, `DontDestroyOnLoad`), do scény ho netreba dávať. Pri `WaveEvents.WaveFinished` zvýši `wavesCompleted` a hru uloží až o jeden frame neskôr, aby zápis súboru nezdržal obrazovku s výsledkom (BRYN-93). `WaveManager` sa nemení.
+- Ťuknutie na stavenisko otvorí `BuildingUnlockPanel` (vytvorí sa sám pri prvom použití, UI v kóde, sortingOrder 150: nad upgrade panelom 100, pod Nastaveniami 200). Pred míľnikom ukáže `Odomkne sa po N. vlne (dokončené X/N)`. Po míľniku je tlačidlo `Odomknúť` s cenou; nejde, keď beží vlna alebo je málo mincí (s dôvodom).
+- Odomknutie odpočíta mince, nastaví `isActive = true` a uloží hru. Budovu zobrazí `BuildingView` sám. Sprity panelu sa preberajú z `BuildingUpgradePanel.Instance` (4 verejné gettery), bez neho sa použijú farby.
+- Odomknuté budovy zatiaľ nemajú potreby hostí (mimo tohto tasku).
+- Testovanie: kláves `N` pridá dokončenú vlnu (pozri Debug controls).
 
 ## Settings (BRYN-18)
 

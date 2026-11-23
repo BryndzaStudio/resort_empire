@@ -21,6 +21,14 @@ public class BuildingState
     // BRYN-24: Cena vylepšenia v minciach: level 1 -> 2 = 200, level 2 -> 3 = 500. Hodnoty sa menia len tu.
     private static readonly int[] UpgradeCosts = { 200, 500 };
 
+    // BRYN-26/27: Odomknutie budovy: po koľkých dokončených vlnách sa dá kúpiť a za koľko mincí.
+    // Ceny sú dočasné. Hodnoty (vlny aj ceny) sa menia len tu.
+    private static readonly (BuildingType type, int wave, int cost)[] Unlocks =
+    {
+        (BuildingType.Pool, 3, 500),
+        (BuildingType.Bungalows, 6, 1000)
+    };
+
     public BuildingType type;
     public int level;
     public bool isActive;
@@ -50,6 +58,34 @@ public class BuildingState
     {
         int index = Math.Max(level, 1) - 1;
         return index < UpgradeCosts.Length ? UpgradeCosts[index] : -1;
+    }
+
+    // BRYN-26: Po koľkých dokončených vlnách sa budova odomyká. Vráti -1, ak sa budova neodomyká.
+    public static int UnlockWave(BuildingType type)
+    {
+        foreach (var unlock in Unlocks)
+        {
+            if (unlock.type == type)
+            {
+                return unlock.wave;
+            }
+        }
+
+        return -1;
+    }
+
+    // BRYN-27: Cena odomknutia v minciach. Vráti -1, ak sa budova neodomyká.
+    public static int UnlockCost(BuildingType type)
+    {
+        foreach (var unlock in Unlocks)
+        {
+            if (unlock.type == type)
+            {
+                return unlock.cost;
+            }
+        }
+
+        return -1;
     }
 
     // Volá sa po načítaní savu. Hostia sa neukladajú, takže po načítaní v budove nikto nie je:
