@@ -134,6 +134,23 @@ Click inside the Game view before using the controls.
 3. Hotovo: `AudioChannel` nastaví `AudioSource.mute` pri zapnutí objektu aj pri zmene nastavenia za behu. Na tom istom `AudioSource` nenastavuj `mute` sám, prepísalo by sa.
 4. Ak zvuk púšťaš cez `AudioSource.PlayClipAtPoint` alebo vytváraš `AudioSource` v kóde, pridaj `AudioChannel` aj tam (`gameObject.AddComponent<AudioChannel>().Kind = AudioChannel.Channel.Sound`), alebo si pozri `GameAudioSettings.SoundMuted` pred prehraním.
 
+## Hodnotenie vlny (BRYN-80, BRYN-81, BRYN-83, BRYN-84)
+
+- BRYN-81: spokojnosť hosťa sa počíta z čakania od príchodu na ostrov (koniec móla) po začiatok obsluhy v budove. Čas obsluhy sa nepočíta. Čakanie do `Satisfied Wait Seconds` (8 s) = 100 %, od `Unhappy Wait Seconds` (40 s) = 0 %, medzi tým rovnomerne. Chôdza k budove a státie v rade sa počítajú do čakania.
+- `GuestManager` vyvolá statickú udalosť `GuestServiceStarted(hosť, budova, čakanie)` v momente, keď hosť vojde do budovy. `GuestState.arrivedAt` je čas príchodu na ostrov.
+- BRYN-80: `WaveRating` (statická trieda, do scény sa nepridáva) zbiera spokojnosť hostí počas vlny. `WaveManager` ju vynuluje pri štarte vlny a tesne pred `WaveEvents.WaveFinished` doplní do `WaveResult`: `satisfaction` (priemer v %), `stars` (1 – 5) a `buildings`.
+- Prahy hviezdičiek sú v `Assets/Config/GameConfig.asset`: `Min Satisfaction For 2/3/4/5 Stars` (20/40/60/80 %). 1 hviezdička je vždy minimum.
+- BRYN-83/84: pre každú aktívnu budovu je v `WaveResult.buildings` počet hostí a priemerné čakanie. Budova je bottleneck, ak čakanie presiahlo `Bottleneck Wait Seconds` (15 s). Obrazovka s výsledkom ich vypíše v stĺpcoch „Čo vyšlo“ (nie bottleneck, aj budovy bez hostí) a „Čo treba vylepšiť“ (bottleneck).
+- `ResultScreen` má nové voliteľné polia `Star Full Sprite` a `Star Empty Sprite` (`icon_star_full`, `icon_star_empty` z `Assets/Art/horny-panel`, Texture Type musí byť Sprite). Bez nich sa hviezdička nakreslí v kóde.
+- Hostia, ktorí sa nedostali do žiadnej budovy (napr. chýba budova pre ich potrebu), sa do spokojnosti nepočítajú.
+
+## Zmena personálu na budove (BRYN-37, BRYN-91)
+
+- Keď sa budove zmení obsluha (`GameState.IsStaffed`), nad odznakom s pracovníkom sa objaví zelené `+1 personál` (pribudol) alebo červené `-1 personál` (ubudol). Text je na tmavej podložke, vystúpi nahor a za 1 s zmizne.
+- `StaffChangeIndicator` si pridáva `BuildingView` sám (len ak má prefab priradený `Worker Badge Sprite`), prefab ani scéna sa nemenia. Pri prvom zobrazení budovy sa nič neukáže, len pri zmene.
+- Nezáleží na tom, čo personál zmenilo (presun personálu BRYN-33/34, nový pracovník, kláves `W` v `GameStateTester`). Stačí, aby to bolo vidieť v `GameState.IsStaffed`.
+- BRYN-91: zmena sa zobrazí do 100 ms. Text je vytvorený vopred a len sa zapne v tom istom frame, v ktorom `BuildingView` zmenu zistí (kontroluje ju každý frame, takže najneskôr o 1 frame). Na konci frame sa do Console vypíše `BRYN-91: ... zobrazený za X ms`, nad 100 ms varovanie.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.

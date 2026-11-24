@@ -1,9 +1,20 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GuestManager : MonoBehaviour
 {
     public static GuestManager Instance { get; private set; }
+
+    // BRYN-81: hosť vošiel do budovy a začína sa jeho obsluha. Posiela hosťa, budovu
+    // a čas čakania v sekundách (od príchodu na ostrov po začiatok obsluhy, bez času obsluhy).
+    public static event Action<GuestState, BuildingState, float> GuestServiceStarted;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetEvents()
+    {
+        GuestServiceStarted = null;
+    }
 
     private sealed class BuildingRuntime
     {
@@ -138,6 +149,7 @@ public class GuestManager : MonoBehaviour
         Visit visit = FindVisit(guest);
         if (visit == null) return false;
         if (visit.building != null) return true;
+        if (visit.state.arrivedAt < 0f) visit.state.arrivedAt = Time.time; // BRYN-81
 
         BuildingRuntime destination = null;
         foreach (BuildingRuntime building in buildings)
@@ -176,6 +188,9 @@ public class GuestManager : MonoBehaviour
             visit.serving = true;
             visit.serviceProgress = 0f;
             visit.view.gameObject.SetActive(false);
+            // BRYN-81: čakanie končí začiatkom obsluhy (čas obsluhy sa do spokojnosti nepočíta).
+            float wait = visit.state.arrivedAt >= 0f ? Time.time - visit.state.arrivedAt : 0f;
+            GuestServiceStarted?.Invoke(visit.state, visit.building.queue.Building, wait);
         });
     }
 

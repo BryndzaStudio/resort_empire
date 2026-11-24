@@ -14,3 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameConfig
   startingCoins: 1000
   startingEnergy: 100
+  satisfiedWaitSeconds: 8
+  unhappyWaitSeconds: 40
+  minSatisfactionFor2Stars: 20
+  minSatisfactionFor3Stars: 40
+  minSatisfactionFor4Stars: 60
+  minSatisfactionFor5Stars: 80
+  bottleneckWaitSeconds: 15

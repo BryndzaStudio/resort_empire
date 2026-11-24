@@ -17,6 +17,9 @@ public class GameManager : MonoBehaviour
 
     public GameState CurrentState { get; private set; }
 
+    // BRYN-80/81: nastavenia hry pre ostatné skripty (môže byť null, ak config nie je priradený).
+    public GameConfig Config => config;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

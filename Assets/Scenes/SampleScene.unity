@@ -1026,6 +1026,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ResultScreen
   panelSprite: {fileID: 0}
   buttonSprite: {fileID: 0}
+  starFullSprite: {fileID: 8230958446040035997, guid: fa07582437e98da4d8fb0292ddc69f24, type: 3}
+  starEmptySprite: {fileID: 2313709422899001817, guid: 47540a456cc00de46b2ea743abfde5b3, type: 3}
 --- !u!1 &608825839
 GameObject:
   m_ObjectHideFlags: 0
