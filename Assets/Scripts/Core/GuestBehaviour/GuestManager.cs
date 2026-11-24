@@ -239,6 +239,7 @@ public class GuestManager : MonoBehaviour
     private void CompleteVisit(Visit visit)
     {
         if (!visit.building.queue.CompleteService(visit.state, out GuestState next)) return;
+
         visits.Remove(visit);
         guests.Remove(visit.state);
         if (GuestStatistics.Instance != null) GuestStatistics.Instance.GuestServed();

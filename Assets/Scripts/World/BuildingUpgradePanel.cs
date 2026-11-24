@@ -24,7 +24,7 @@ public class BuildingUpgradePanel : MonoBehaviour
     public Sprite CoinSprite => coinSprite;
 
     // Vzhľad na ladenie (referenčné rozlíšenie 1920x1080).
-    private static readonly Vector2 PanelSize = new Vector2(520f, 663f);
+    private static readonly Vector2 PanelSize = new Vector2(600f, 760f);
     private static readonly Color TextColor = new Color(0.35f, 0.2f, 0.08f);
     private static readonly Color WarningColor = new Color(0.75f, 0.15f, 0.1f);
 
@@ -36,7 +36,12 @@ public class BuildingUpgradePanel : MonoBehaviour
     private TMP_Text costText;
     private Image coinImage;
     private Button upgradeButton;
+    private Button boostButton;
+    private TMP_Text boostButtonText;
+    private TMP_Text boostReasonText;
+
     private BuildingState building;
+    private BuildingView selectedView;
 
     private void Awake()
     {
@@ -69,9 +74,12 @@ public class BuildingUpgradePanel : MonoBehaviour
         }
     }
 
-    public void Show(BuildingState state)
+
+    public void Show(BuildingState state, BuildingView view = null)
     {
         building = state;
+        selectedView = view;
+
         root.SetActive(true);
         Refresh();
     }
@@ -79,8 +87,10 @@ public class BuildingUpgradePanel : MonoBehaviour
     public void Hide()
     {
         building = null;
+        selectedView = null;
         root.SetActive(false);
     }
+
 
     // Kým je panel otvorený, stále sleduje mince a vlnu (napr. vlna sa môže spustiť, kým je panel otvorený).
     private void Update()
@@ -128,6 +138,47 @@ public class BuildingUpgradePanel : MonoBehaviour
 
         reasonText.text = reason;
         upgradeButton.interactable = canUpgrade;
+
+
+        // BRYN-72: Update the boost button and its availability.
+        bool canBoost = selectedView != null
+            && selectedView.CanActivateBoost;
+
+        boostButton.interactable = canBoost;
+
+        if (selectedView == null)
+        {
+            boostButtonText.text = "Boost nedostupný";
+            boostReasonText.text = "";
+        }
+        else
+        {
+            int energyCost = selectedView.BoostEnergyCost;
+
+            boostButtonText.text = selectedView.IsBoostActive
+                ? "Boost aktívny"
+                : $"Boost -50 % ({energyCost} energie)";
+
+            if (selectedView.IsBoostActive)
+            {
+                boostReasonText.text = "Boost už je aktívny.";
+            }
+            else if (WaveManager.Instance == null ||
+                     !WaveManager.Instance.IsWaveRunning)
+            {
+                boostReasonText.text = "Dostupné iba počas vlny.";
+            }
+            else if (GameManager.Instance.CurrentState.energy < energyCost)
+            {
+                boostReasonText.text = "Nedostatok energie.";
+            }
+            else
+            {
+                boostReasonText.text =
+                    "Obsluha 2x rýchlejšia do konca vlny.";
+            }
+        }
+
     }
 
     // Upgrade je možný len ak budova nie je na maximálnom leveli, nebeží vlna a je dosť mincí.
@@ -169,7 +220,15 @@ public class BuildingUpgradePanel : MonoBehaviour
         GameManager.Instance.SaveGame();
         Refresh();
     }
+    // BRYN-72: Activate a speed boost for the selected building.
+    private void Boost()
+    {
+        if (selectedView == null)
+            return;
 
+        if (selectedView.TryActivateBoost())
+            Refresh();
+    }
     private static string DisplayName(BuildingType type)
     {
         return type switch
@@ -208,11 +267,26 @@ public class BuildingUpgradePanel : MonoBehaviour
         ((RectTransform)panel.transform).sizeDelta = PanelSize;
 
         titleText = NewText("Title", panel.transform, 40f, TextColor, new Vector2(0.25f, 0.87f), new Vector2(0.75f, 0.97f));
-        infoText = NewText("Info", panel.transform, 34f, TextColor, new Vector2(0.12f, 0.5f), new Vector2(0.88f, 0.8f));
-        reasonText = NewText("Reason", panel.transform, 28f, WarningColor, new Vector2(0.12f, 0.31f), new Vector2(0.88f, 0.48f));
 
-        Image buttonImage = NewImage("UpgradeButton", panel.transform, buttonSprite, new Color(0.3f, 0.7f, 0.2f),
-            new Vector2(0.18f, 0.1f), new Vector2(0.82f, 0.26f));
+        infoText = NewText(
+            "Info", panel.transform, 34f, TextColor,
+            new Vector2(0.12f, 0.58f),
+            new Vector2(0.88f, 0.82f)
+        );
+
+        reasonText = NewText(
+            "Reason", panel.transform, 26f, WarningColor,
+            new Vector2(0.12f, 0.48f),
+            new Vector2(0.88f, 0.56f)
+        );
+
+        Image buttonImage = NewImage(
+            "UpgradeButton", panel.transform, buttonSprite,
+            new Color(0.3f, 0.7f, 0.2f),
+            new Vector2(0.18f, 0.33f),
+            new Vector2(0.82f, 0.46f)
+        );
+
         upgradeButton = buttonImage.gameObject.AddComponent<Button>();
         upgradeButton.targetGraphic = buttonImage;
         upgradeButton.onClick.AddListener(Upgrade);
@@ -224,6 +298,34 @@ public class BuildingUpgradePanel : MonoBehaviour
         coinImage = NewImage("Coin", buttonImage.transform, coinSprite, Color.white, new Vector2(0.78f, 0.15f), new Vector2(0.95f, 0.85f));
         coinImage.preserveAspect = true;
         coinImage.raycastTarget = false;
+
+
+        // BRYN-72: Feedback for the boost action.
+        boostReasonText = NewText(
+            "BoostReason", panel.transform, 24f, WarningColor,
+            new Vector2(0.10f, 0.23f),
+            new Vector2(0.90f, 0.31f)
+        );
+
+        // Second button, using the same sprite as Upgrade.
+        Image boostImage = NewImage(
+            "BoostButton", panel.transform, buttonSprite,
+            new Color(0.2f, 0.6f, 0.85f),
+            new Vector2(0.18f, 0.08f),
+            new Vector2(0.82f, 0.21f)
+        );
+
+        boostButton = boostImage.gameObject.AddComponent<Button>();
+        boostButton.targetGraphic = boostImage;
+        boostButton.onClick.AddListener(Boost);
+
+        boostButtonText = NewText(
+            "BoostLabel", boostImage.transform, 32f,
+            Color.white, Vector2.zero, Vector2.one
+        );
+
+        boostButtonText.fontStyle = FontStyles.Bold;
+
 
         Vector2 topRight = Vector2.one;
         Image closeImage = NewImage("Close", panel.transform, closeSprite, new Color(0.85f, 0.2f, 0.15f), topRight, topRight);
