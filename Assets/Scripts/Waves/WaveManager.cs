@@ -37,7 +37,6 @@ public class WaveManager : MonoBehaviour
     private int waveGuests;
     private int arrivedGuests;
     private float waveStartTime;
-    private int coinsAtStart;
     private int servedGuestsAtStart;
     private StartWaveButton startWaveButton;
     private ResultScreen resultScreen;
@@ -122,7 +121,6 @@ public class WaveManager : MonoBehaviour
         waveGuests = guestsPerWave;
         arrivedGuests = 0;
         waveStartTime = Time.time;
-        coinsAtStart = CurrentCoins();
 
         // BRYN-69: Remember the served guest count at wave start.
         servedGuestsAtStart = GuestStatistics.Instance != null
@@ -188,8 +186,10 @@ public class WaveManager : MonoBehaviour
 
 
 
+
     private void FinishWave()
     {
+        // Prevent this wave from being completed more than once.
         state = WaveState.Idle;
 
         // BRYN-69: Count guests served during this wave.
@@ -206,7 +206,6 @@ public class WaveManager : MonoBehaviour
         {
             guestsArrived = arrivedGuests,
             guestsServed = servedThisWave,
-            coinsEarned = CurrentCoins() - coinsAtStart,
             durationSeconds = Time.time - waveStartTime,
             finishedAtRealtime = Time.realtimeSinceStartup
         };
@@ -214,12 +213,42 @@ public class WaveManager : MonoBehaviour
         // BRYN-80/81: Calculate satisfaction and wave rating.
         WaveRating.Complete(result);
 
-        // BRYN-69: Calculate coins using the official wave rating.
+        // BRYN-69: Calculate the reward using the wave rating.
         result.calculatedCoinReward =
             WaveRewardCalculator.CalculateCoins(
                 servedThisWave,
                 result.stars
             );
+
+        // BRYN-70: Award coins only after the wave has ended.
+        GameManager manager = GameManager.Instance;
+
+        if (manager != null && manager.CurrentState != null)
+        {
+            int reward = Mathf.Max(0, result.calculatedCoinReward);
+
+            // Credit the player's account.
+            manager.CurrentState.coins += reward;
+
+            // Record the actual awarded amount for the result screen.
+            result.coinsEarned = reward;
+
+            // Persist the updated coin balance.
+            manager.SaveGame();
+
+            Debug.Log(
+                $"BRYN-70: Awarded {reward} coins | " +
+                $"New balance: {manager.CurrentState.coins}"
+            );
+        }
+        else
+        {
+            result.coinsEarned = 0;
+
+            Debug.LogError(
+                "BRYN-70: Cannot award coins. GameManager or GameState is missing."
+            );
+        }
 
         Debug.Log(
             $"BRYN-69: Wave finished | " +
@@ -228,14 +257,16 @@ public class WaveManager : MonoBehaviour
             $"Calculated reward: {result.calculatedCoinReward} coins"
         );
 
+        // Notify the result screen and other listeners.
         WaveEvents.RaiseWaveFinished(result);
 
-        // Unlock the next wave if no result screen exists.
+        // Unlock the next wave if there is no result screen.
         if (resultScreen == null)
         {
             UnlockStartWaveButton();
         }
     }
+
 
 
 
@@ -247,11 +278,6 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    private static int CurrentCoins()
-    {
-        GameManager manager = GameManager.Instance;
-        return manager != null && manager.CurrentState != null ? manager.CurrentState.coins : 0;
-    }
 
     // BRYN-92: kontrola, že príchod hostí trval najviac 90 sekúnd.
     private void LogArrivalDuration(float duration)
