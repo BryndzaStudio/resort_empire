@@ -220,35 +220,60 @@ public class WaveManager : MonoBehaviour
                 result.stars
             );
 
-        // BRYN-70: Award coins only after the wave has ended.
+
+        // BRYN-70/71: Award coins and energy after the wave ends.
         GameManager manager = GameManager.Instance;
 
         if (manager != null && manager.CurrentState != null)
         {
-            int reward = Mathf.Max(0, result.calculatedCoinReward);
+            // BRYN-70: Calculate the actual coin award.
+            int coinReward = Mathf.Max(
+                0,
+                result.calculatedCoinReward
+            );
 
-            // Credit the player's account.
-            manager.CurrentState.coins += reward;
+            // BRYN-71: Read the energy multiplier from GameConfig.
+            // Use 5 as fallback when no configuration is assigned.
+            int energyPerStar = manager.Config != null
+                ? Mathf.Max(0, manager.Config.energyPerStar)
+                : 5;
 
-            // Record the actual awarded amount for the result screen.
-            result.coinsEarned = reward;
+            int energyReward =
+                Mathf.Clamp(result.stars, 0, 5) * energyPerStar;
 
-            // Persist the updated coin balance.
+            // Credit both rewards at the end of the wave.
+            manager.CurrentState.coins += coinReward;
+            manager.CurrentState.energy += energyReward;
+
+            // Store the actual awarded amounts.
+            result.coinsEarned = coinReward;
+            result.energyEarned = energyReward;
+
+            // Save both rewards together.
             manager.SaveGame();
 
             Debug.Log(
-                $"BRYN-70: Awarded {reward} coins | " +
+                $"BRYN-70: Awarded {coinReward} coins | " +
                 $"New balance: {manager.CurrentState.coins}"
+            );
+
+            Debug.Log(
+                $"BRYN-71: Awarded {energyReward} energy | " +
+                $"Rating: {result.stars}/5 | " +
+                $"New energy: {manager.CurrentState.energy}"
             );
         }
         else
         {
             result.coinsEarned = 0;
+            result.energyEarned = 0;
 
             Debug.LogError(
-                "BRYN-70: Cannot award coins. GameManager or GameState is missing."
+                "BRYN-70/71: Cannot award rewards. " +
+                "GameManager or GameState is missing."
             );
         }
+
 
         Debug.Log(
             $"BRYN-69: Wave finished | " +

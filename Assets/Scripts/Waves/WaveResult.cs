@@ -27,6 +27,8 @@ public class WaveResult
     // BRYN-69: Coin reward calculation
     public int guestsServed;
     public int calculatedCoinReward;
+    // BRYN-71: Energy actually awarded after the wave.
+    public int energyEarned;
 }
 
 // BRYN-83/84: Results for an individual building.
