@@ -17,21 +17,6 @@ public static class WaveRewardCalculator
         2.0f  // 5 stars
     };
 
-    public static int CalculateRating(int servedGuests, int totalGuests)
-    {
-        if (servedGuests <= 0 || totalGuests <= 0)
-            return 0;
-
-        float servedRatio = Mathf.Clamp01(
-            (float)servedGuests / totalGuests
-        );
-
-        return Mathf.Clamp(
-            Mathf.CeilToInt(servedRatio * 5f),
-            1,
-            5
-        );
-    }
 
     public static int CalculateCoins(int servedGuests, int rating)
     {
