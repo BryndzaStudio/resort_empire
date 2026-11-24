@@ -144,6 +144,13 @@ Click inside the Game view before using the controls.
 - `ResultScreen` má nové voliteľné polia `Star Full Sprite` a `Star Empty Sprite` (`icon_star_full`, `icon_star_empty` z `Assets/Art/horny-panel`, Texture Type musí byť Sprite). Bez nich sa hviezdička nakreslí v kóde.
 - Hostia, ktorí sa nedostali do žiadnej budovy (napr. chýba budova pre ich potrebu), sa do spokojnosti nepočítajú.
 
+## Zmena personálu na budove (BRYN-37, BRYN-91)
+
+- Keď sa budove zmení obsluha (`GameState.IsStaffed`), nad odznakom s pracovníkom sa objaví zelené `+1 personál` (pribudol) alebo červené `-1 personál` (ubudol). Text je na tmavej podložke, vystúpi nahor a za 1 s zmizne.
+- `StaffChangeIndicator` si pridáva `BuildingView` sám (len ak má prefab priradený `Worker Badge Sprite`), prefab ani scéna sa nemenia. Pri prvom zobrazení budovy sa nič neukáže, len pri zmene.
+- Nezáleží na tom, čo personál zmenilo (presun personálu BRYN-33/34, nový pracovník, kláves `W` v `GameStateTester`). Stačí, aby to bolo vidieť v `GameState.IsStaffed`.
+- BRYN-91: zmena sa zobrazí do 100 ms. Text je vytvorený vopred a len sa zapne v tom istom frame, v ktorom `BuildingView` zmenu zistí (kontroluje ju každý frame, takže najneskôr o 1 frame). Na konci frame sa do Console vypíše `BRYN-91: ... zobrazený za X ms`, nad 100 ms varovanie.
+
 ## Current limitations
 
 - Workers are represented by a count; individual workers and assignments are not yet modeled.
