@@ -5,6 +5,7 @@ public enum BuildingType
 {
     Restaurant = 0,
     BeachBar = 1,
+
     Reception = 2,
     // BRYN-21: nové budovy sa pridávajú len na koniec, aby sa nezmenili hodnoty v starých savoch.
     Pool = 3,

@@ -57,7 +57,16 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
     public BuildingState State => state;
-    public float ServiceSeconds { get; private set; } = 10f;
+
+    private float baseServiceSeconds = 10f;
+    private bool isBoostActive;
+
+    public bool IsBoostActive => isBoostActive;
+
+    // BRYN-72: Boost halves the effective service time.
+    public float ServiceSeconds =>
+        baseServiceSeconds * (isBoostActive ? 0.5f : 1f);
+
     private Vector2 guestEntranceOffset;
     private Vector2 guestQueueStep;
     public Vector3 GuestEntrancePosition => transform.position + (Vector3)guestEntranceOffset;
@@ -86,13 +95,84 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
 
         if (state != null && state.isActive)
         {
-            BuildingUpgradePanel.Instance.Show(state);
+            BuildingUpgradePanel.Instance.Show(state, this);
         }
         else
         {
             // BRYN-26/27: ťuknutie na stavenisko otvorí panel na odomknutie budovy.
             BuildingUnlockPanel.Show(state);
         }
+    }
+    private void OnEnable()
+    {
+        WaveEvents.WaveFinished += OnWaveFinished;
+    }
+
+    private void OnDisable()
+    {
+        WaveEvents.WaveFinished -= OnWaveFinished;
+    }
+
+    // BRYN-72: Cost comes from the shared GameConfig.
+    public int BoostEnergyCost
+    {
+        get
+        {
+            GameManager manager = GameManager.Instance;
+
+            if (manager != null && manager.Config != null)
+                return Mathf.Max(0, manager.Config.buildingBoostEnergyCost);
+
+            return 10; // Fallback cost
+        }
+    }
+
+    // Check whether this building can currently be boosted.
+    public bool CanActivateBoost
+    {
+        get
+        {
+            GameManager manager = GameManager.Instance;
+            WaveManager wave = WaveManager.Instance;
+
+            return state != null
+                && state.isActive
+                && !isBoostActive
+                && wave != null
+                && wave.IsWaveRunning
+                && manager != null
+                && manager.CurrentState != null
+                && manager.CurrentState.energy >= BoostEnergyCost;
+        }
+    }
+
+    // Spend energy and activate the boost for this building.
+    public bool TryActivateBoost()
+    {
+        if (!CanActivateBoost)
+            return false;
+
+        GameManager manager = GameManager.Instance;
+        int cost = BoostEnergyCost;
+
+        manager.CurrentState.energy -= cost;
+        isBoostActive = true;
+
+        manager.SaveGame();
+
+        Debug.Log(
+            $"BRYN-72: Boost activated for {Type} | " +
+            $"Cost: {cost} energy | " +
+            $"Service time: {ServiceSeconds:0.0}s"
+        );
+
+        return true;
+    }
+
+    // Remove the temporary speed boost after the wave.
+    private void OnWaveFinished(WaveResult result)
+    {
+        isBoostActive = false;
     }
 
     // Oblasť ťuknutia = obrázok budovy. Prepočíta sa pri každej zmene obrázka.
@@ -127,7 +207,8 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         state = GameManager.Instance.CurrentState.buildings.Find(b => b.type == type);
         levelSprites = sprites != null && sprites.Length > 0 ? sprites : new[] { sprite };
         constructionSprite = construction;
-        ServiceSeconds = serviceSeconds > 0f ? serviceSeconds : 10f;
+        baseServiceSeconds = serviceSeconds > 0f ? serviceSeconds : 10f;
+        isBoostActive = false;
         guestEntranceOffset = entranceOffset ?? new Vector2(0f, 0.1f);
         guestQueueStep = queueStep ?? new Vector2(1.25f, -0.65f);
         if (state != null)

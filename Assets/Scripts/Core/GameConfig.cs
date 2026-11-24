@@ -37,4 +37,10 @@ public class GameConfig : ScriptableObject
     [Min(0)]
     public int energyPerStar = 5;
 
+    // BRYN-72: Energy cost for boosting a building.
+    [Header("Building Speed Boost (BRYN-72)")]
+    [Tooltip("Energy required to halve a building's service time.")]
+    [Min(0)]
+    public int buildingBoostEnergyCost = 10;
+
 }
