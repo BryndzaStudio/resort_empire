@@ -50,6 +50,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     private SpriteRenderer workerBadge;
     private int shownStaffed = -1;
 
+    // BRYN-37: "+1 personál" / "-1 personál" nad odznakom pri zmene obsluhy.
+    private const float StaffChangeOffsetY = 1.3f;
+    private StaffChangeIndicator staffChange;
+
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
     public BuildingState State => state;
@@ -170,8 +174,15 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
             return;
         }
 
+        int previous = shownStaffed;
         shownStaffed = value;
         workerBadge.color = staffed ? Color.white : NoWorkerColor;
+
+        // BRYN-37/91: pri zmene (nie pri prvom zobrazení) ukážeme, či personál pribudol alebo ubudol.
+        if (previous != -1 && staffChange != null)
+        {
+            staffChange.Show(staffed, workerBadge.transform.position + Vector3.up * StaffChangeOffsetY);
+        }
     }
 
     // BRYN-21: Dokončená budova (isActive) sa zobrazí podľa levelu (BRYN-25), nedokončená ako stavenisko.
@@ -294,6 +305,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
             workerBadge = workerObject.AddComponent<SpriteRenderer>();
             workerBadge.sprite = workerBadgeSprite;
             workerBadge.sortingOrder = BadgeSortingOrder;
+
+            // BRYN-37: text o zmene personálu, navrch nad odznakmi.
+            staffChange = gameObject.AddComponent<StaffChangeIndicator>();
+            staffChange.Init(compensation, TextSortingOrder + 1);
         }
     }
 

@@ -7,6 +7,7 @@ using UnityEngine;
 // BRYN-92: celý príchod hostí z lode na ostrov musí trvať najviac 90 sekúnd.
 // BRYN-52: vlna sa skončí, keď hostia už nepribúdajú (všetci došli na ostrov) a všetky rady sú prázdne.
 // BRYN-54: po skončení vlny sa zobrazí výsledok (ResultScreen). Start Wave sa odomkne až po jeho zavretí.
+// BRYN-80/81/83/84: pri štarte vlny sa vynuluje hodnotenie (WaveRating), pri konci sa doplní do výsledku.
 // Loď (BoatController) si od správcu vlny berie počet hostí a odstup medzi nimi.
 // Skript patrí na prázdny objekt WaveManager v scéne.
 public class WaveManager : MonoBehaviour
@@ -122,9 +123,15 @@ public class WaveManager : MonoBehaviour
         arrivedGuests = 0;
         waveStartTime = Time.time;
         coinsAtStart = CurrentCoins();
+
+        // BRYN-69: Remember the served guest count at wave start.
         servedGuestsAtStart = GuestStatistics.Instance != null
             ? GuestStatistics.Instance.ServedGuests
             : 0;
+
+        // BRYN-80/81: Reset guest satisfaction tracking for the new wave.
+        WaveRating.BeginWave();
+
 
         Debug.Log($"Vlna začala: {waveGuests} hostí, odstup {ArrivalInterval:0.0} s.");
     }
@@ -180,11 +187,12 @@ public class WaveManager : MonoBehaviour
     }
 
 
+
     private void FinishWave()
     {
         state = WaveState.Idle;
 
-        // BRYN-69: Count only guests served in this wave.
+        // BRYN-69: Count guests served during this wave.
         int totalServed = GuestStatistics.Instance != null
             ? GuestStatistics.Instance.ServedGuests
             : 0;
@@ -194,33 +202,30 @@ public class WaveManager : MonoBehaviour
             totalServed - servedGuestsAtStart
         );
 
-        // Calculate rating and the corresponding coin reward.
-        int rating = WaveRewardCalculator.CalculateRating(
-            servedThisWave,
-            arrivedGuests
-        );
-
-        int calculatedReward = WaveRewardCalculator.CalculateCoins(
-            servedThisWave,
-            rating
-        );
-
         WaveResult result = new WaveResult
         {
             guestsArrived = arrivedGuests,
             guestsServed = servedThisWave,
-            ratingStars = rating,
-            calculatedCoinReward = calculatedReward,
             coinsEarned = CurrentCoins() - coinsAtStart,
             durationSeconds = Time.time - waveStartTime,
             finishedAtRealtime = Time.realtimeSinceStartup
         };
 
+        // BRYN-80/81: Calculate satisfaction and wave rating.
+        WaveRating.Complete(result);
+
+        // BRYN-69: Calculate coins using the official wave rating.
+        result.calculatedCoinReward =
+            WaveRewardCalculator.CalculateCoins(
+                servedThisWave,
+                result.stars
+            );
+
         Debug.Log(
             $"BRYN-69: Wave finished | " +
             $"Served: {servedThisWave}/{arrivedGuests} | " +
-            $"Rating: {rating}/5 | " +
-            $"Calculated reward: {calculatedReward} coins"
+            $"Rating: {result.stars}/5 | " +
+            $"Calculated reward: {result.calculatedCoinReward} coins"
         );
 
         WaveEvents.RaiseWaveFinished(result);
@@ -231,6 +236,7 @@ public class WaveManager : MonoBehaviour
             UnlockStartWaveButton();
         }
     }
+
 
 
     private void UnlockStartWaveButton()
