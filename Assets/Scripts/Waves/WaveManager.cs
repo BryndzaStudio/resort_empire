@@ -7,6 +7,7 @@ using UnityEngine;
 // BRYN-92: celý príchod hostí z lode na ostrov musí trvať najviac 90 sekúnd.
 // BRYN-52: vlna sa skončí, keď hostia už nepribúdajú (všetci došli na ostrov) a všetky rady sú prázdne.
 // BRYN-54: po skončení vlny sa zobrazí výsledok (ResultScreen). Start Wave sa odomkne až po jeho zavretí.
+// BRYN-80/81/83/84: pri štarte vlny sa vynuluje hodnotenie (WaveRating), pri konci sa doplní do výsledku.
 // Loď (BoatController) si od správcu vlny berie počet hostí a odstup medzi nimi.
 // Skript patrí na prázdny objekt WaveManager v scéne.
 public class WaveManager : MonoBehaviour
@@ -121,6 +122,7 @@ public class WaveManager : MonoBehaviour
         arrivedGuests = 0;
         waveStartTime = Time.time;
         coinsAtStart = CurrentCoins();
+        WaveRating.BeginWave();
 
         Debug.Log($"Vlna začala: {waveGuests} hostí, odstup {ArrivalInterval:0.0} s.");
     }
@@ -186,6 +188,7 @@ public class WaveManager : MonoBehaviour
             durationSeconds = Time.time - waveStartTime,
             finishedAtRealtime = Time.realtimeSinceStartup
         };
+        WaveRating.Complete(result);
 
         Debug.Log($"Vlna skončila: hostia {result.guestsArrived}, mince {result.coinsEarned:+0;-0;0}, trvanie {result.durationSeconds:0.0} s.");
         WaveEvents.RaiseWaveFinished(result);
