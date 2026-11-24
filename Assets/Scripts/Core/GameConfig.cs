@@ -29,4 +29,12 @@ public class GameConfig : ScriptableObject
     [Header("Bottleneck (BRYN-83, BRYN-84)")]
     [Tooltip("Budova je bottleneck, ak hostia, ktorí do nej išli, čakali priemerne dlhšie ako tento čas (s).")]
     [Min(0)] public float bottleneckWaitSeconds = 15f;
+
+
+    // BRYN-71: Energy awarded after completing a wave.
+    [Header("Wave Energy Rewards (BRYN-71)")]
+    [Tooltip("Energy awarded per star after a completed wave.")]
+    [Min(0)]
+    public int energyPerStar = 5;
+
 }

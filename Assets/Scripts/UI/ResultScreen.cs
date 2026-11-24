@@ -95,9 +95,11 @@ public class ResultScreen : MonoBehaviour
             : "Spokojnosť hostí: –";
 
         detailsText.text =
-            $"Hostia: {result.guestsArrived}     " +
-            $"Zarobené mince: {result.coinsEarned:+0;-0;0}     " +
+            $"Hostia: {result.guestsArrived}    " +
+            $"Mince: {result.coinsEarned:+0;-0;0}    " +
+            $"Energia: {result.energyEarned:+0;-0;0}    " +
             $"Trvanie: {Mathf.RoundToInt(result.durationSeconds)} s";
+
 
         // BRYN-83/84: budovy bez bottlenecku a s bottleneckom.
         goodText.text = BuildingList(result, false);

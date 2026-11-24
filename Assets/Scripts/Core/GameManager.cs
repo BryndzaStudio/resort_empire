@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Config")]
     [SerializeField] private GameConfig config;
+    public GameConfig Config => config;
 
     [Header("Starting Values")]
     [SerializeField] private int startingResortValue = 5000;
@@ -18,7 +19,6 @@ public class GameManager : MonoBehaviour
     public GameState CurrentState { get; private set; }
 
     // BRYN-80/81: nastavenia hry pre ostatné skripty (môže byť null, ak config nie je priradený).
-    public GameConfig Config => config;
 
     private void Awake()
     {
