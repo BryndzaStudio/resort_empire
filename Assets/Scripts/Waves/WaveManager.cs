@@ -19,11 +19,11 @@ public class WaveManager : MonoBehaviour
 
     [Header("Vlna")]
     [Tooltip("Koľko hostí privezie jedna vlna.")]
-    [Min(1)] [SerializeField] private int guestsPerWave = 10;
+    [Min(1)][SerializeField] private int guestsPerWave = 10;
 
     [Tooltip("Za koľko sekúnd vystúpia z lode všetci hostia (od prvého po posledného). " +
              "Zvyšok do 90 s je rezerva na plavbu lode a chôdzu po móle.")]
-    [Range(0f, 75f)] [SerializeField] private float arrivalSpread = 60f;
+    [Range(0f, 75f)][SerializeField] private float arrivalSpread = 60f;
 
     // Fázy vlny: nič sa nedeje / hostia prichádzajú / hostia už nepribúdajú, čakáme na prázdne rady.
     private enum WaveState
@@ -38,6 +38,7 @@ public class WaveManager : MonoBehaviour
     private int arrivedGuests;
     private float waveStartTime;
     private int coinsAtStart;
+    private int servedGuestsAtStart;
     private StartWaveButton startWaveButton;
     private ResultScreen resultScreen;
 
@@ -122,7 +123,15 @@ public class WaveManager : MonoBehaviour
         arrivedGuests = 0;
         waveStartTime = Time.time;
         coinsAtStart = CurrentCoins();
+
+        // BRYN-69: Remember the served guest count at wave start.
+        servedGuestsAtStart = GuestStatistics.Instance != null
+            ? GuestStatistics.Instance.ServedGuests
+            : 0;
+
+        // BRYN-80/81: Reset guest satisfaction tracking for the new wave.
         WaveRating.BeginWave();
+
 
         Debug.Log($"Vlna začala: {waveGuests} hostí, odstup {ArrivalInterval:0.0} s.");
     }
@@ -177,29 +186,58 @@ public class WaveManager : MonoBehaviour
         return true;
     }
 
+
+
     private void FinishWave()
     {
         state = WaveState.Idle;
 
+        // BRYN-69: Count guests served during this wave.
+        int totalServed = GuestStatistics.Instance != null
+            ? GuestStatistics.Instance.ServedGuests
+            : 0;
+
+        int servedThisWave = Mathf.Max(
+            0,
+            totalServed - servedGuestsAtStart
+        );
+
         WaveResult result = new WaveResult
         {
             guestsArrived = arrivedGuests,
+            guestsServed = servedThisWave,
             coinsEarned = CurrentCoins() - coinsAtStart,
             durationSeconds = Time.time - waveStartTime,
             finishedAtRealtime = Time.realtimeSinceStartup
         };
+
+        // BRYN-80/81: Calculate satisfaction and wave rating.
         WaveRating.Complete(result);
 
-        Debug.Log($"Vlna skončila: hostia {result.guestsArrived}, mince {result.coinsEarned:+0;-0;0}, trvanie {result.durationSeconds:0.0} s.");
+        // BRYN-69: Calculate coins using the official wave rating.
+        result.calculatedCoinReward =
+            WaveRewardCalculator.CalculateCoins(
+                servedThisWave,
+                result.stars
+            );
+
+        Debug.Log(
+            $"BRYN-69: Wave finished | " +
+            $"Served: {servedThisWave}/{arrivedGuests} | " +
+            $"Rating: {result.stars}/5 | " +
+            $"Calculated reward: {result.calculatedCoinReward} coins"
+        );
+
         WaveEvents.RaiseWaveFinished(result);
 
-        // Ďalšia vlna sa dá spustiť až po zavretí výsledku (WaveEvents.ResultScreenClosed).
-        // Ak v scéne obrazovka s výsledkom nie je, odomkneme tlačidlo hneď.
+        // Unlock the next wave if no result screen exists.
         if (resultScreen == null)
         {
             UnlockStartWaveButton();
         }
     }
+
+
 
     private void UnlockStartWaveButton()
     {
