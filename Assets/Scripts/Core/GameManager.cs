@@ -17,6 +17,18 @@ public class GameManager : MonoBehaviour
     private const int DefaultStartingEnergy = 100;
 
     public GameState CurrentState { get; private set; }
+    private bool applicationPaused;
+    public bool CanTransferStaff => !applicationPaused && Time.timeScale > 0f;
+
+    public bool TryTransferStaff(BuildingState source, BuildingState target)
+    {
+        if (CurrentState == null || !CurrentState.TryTransferWorker(source, target, !CanTransferStaff))
+        {
+            return false;
+        }
+        SaveGame();
+        return true;
+    }
 
     // BRYN-80/81: nastavenia hry pre ostatné skripty (môže byť null, ak config nie je priradený).
 
@@ -79,6 +91,7 @@ public class GameManager : MonoBehaviour
 
     private void OnApplicationPause(bool paused)
     {
+        applicationPaused = paused;
         if (paused)
         {
             SaveGame();

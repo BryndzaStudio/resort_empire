@@ -11,6 +11,10 @@ public class GameConfig : ScriptableObject
     [Min(0)] public int startingCoins = 1000;
     [Min(0)] public int startingEnergy = 100;
 
+    [Header("Staff service speed")]
+    [Tooltip("Service speed without a worker, relative to a staffed building.")]
+    [Range(0.01f, 1f)] public float unstaffedUtilization = 0.33f;
+
     // BRYN-81: spokojnosť hosťa podľa čakania od príchodu na ostrov po začiatok obsluhy.
     [Header("Spokojnosť hostí (BRYN-81)")]
     [Tooltip("Hosť, ktorý čakal najviac tento čas (s), je úplne spokojný (100 %).")]
