@@ -12,6 +12,8 @@ public class GameState
     public int resortValue;
     public List<BuildingState> buildings;
     public int workerCount;
+    // BRYN-39: one anonymous worker per listed building; stable enum IDs survive saves.
+    public List<BuildingType> workerAssignments;
 
     // BRYN-26: počet dokončených vĺn (míľnik na odomknutie budov). Starý save ho nemá, preto začína na 0.
     public int wavesCompleted;
@@ -30,40 +32,63 @@ public class GameState
             new BuildingState(BuildingType.Reception)
         };
 
-        // BRYN-12: na začiatku hry je k dispozícii jeden pracovník.
-        workerCount = 1;
-
         // BRYN-21: ostatné budovy (bazén, bungalovy) ešte nie sú dokončené, zobrazia sa ako stavenisko.
         EnsureAllBuildings();
+        EnsureStaffing();
     }
 
-    // BRYN-22: Je budova obsluhovaná? Jednoduché pravidlo: pracovníci (workerCount) obsluhujú prvé
-    // aktívne budovy v poradí zoznamu. Stavenisko (isActive = false) pracovníka nepotrebuje.
-    // Keď pribudne skutočné priraďovanie pracovníkov, stačí nahradiť túto metódu.
+    // BRYN-22/39: badges and service read the same persistent assignments.
     public bool IsStaffed(BuildingState building)
     {
-        if (building == null || !building.isActive)
+        return building != null && building.isActive && buildings.Contains(building) &&
+            workerAssignments != null && workerAssignments.Contains(building.type);
+    }
+
+    // BRYN-35: repair legacy saves once, preserving valid assignments and all resources.
+    public void EnsureStaffing()
+    {
+        if (workerAssignments == null) workerAssignments = new List<BuildingType>();
+        int activeCount = buildings.FindAll(b => b != null && b.isActive).Count;
+        workerCount = Math.Max(0, activeCount - 1);
+        var seen = new HashSet<BuildingType>();
+        workerAssignments.RemoveAll(type =>
+            !buildings.Exists(b => b != null && b.isActive && b.type == type) || !seen.Add(type));
+        while (workerAssignments.Count > workerCount)
         {
-            return false;
+            workerAssignments.RemoveAt(workerAssignments.Count - 1);
         }
-
-        int staffed = 0;
-        foreach (BuildingState other in buildings)
+        foreach (BuildingState building in buildings)
         {
-            if (!other.isActive)
+            if (workerAssignments.Count >= workerCount) break;
+            if (building != null && building.isActive && !workerAssignments.Contains(building.type))
             {
-                continue;
+                workerAssignments.Add(building.type);
             }
-
-            if (other == building)
-            {
-                return staffed < workerCount;
-            }
-
-            staffed++;
         }
+    }
 
-        return false;
+    public bool CanTransferWorker(BuildingState source, BuildingState target, bool paused)
+    {
+        return !paused && source != target && IsStaffed(source) && target != null &&
+            target.isActive && buildings.Contains(target) && !IsStaffed(target);
+    }
+
+    // BRYN-33/34/36: one slot, unlocked buildings only, no currency changes.
+    public bool TryTransferWorker(BuildingState source, BuildingState target, bool paused)
+    {
+        if (!CanTransferWorker(source, target, paused)) return false;
+        workerAssignments[workerAssignments.IndexOf(source.type)] = target.type;
+        return true;
+    }
+
+    // New unlocks bring their worker; the previous empty building stays empty.
+    public void ActivateBuilding(BuildingState building)
+    {
+        if (building == null || building.isActive || !buildings.Contains(building)) return;
+        building.isActive = true;
+        if (workerAssignments == null) workerAssignments = new List<BuildingType>();
+        workerAssignments.Add(building.type);
+        EnsureStaffing();
     }
 
     // BRYN-21: doplní budovy, ktoré v zozname chýbajú (napr. starý save), ako nedokončené (isActive = false).

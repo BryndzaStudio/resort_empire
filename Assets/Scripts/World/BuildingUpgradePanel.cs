@@ -24,7 +24,7 @@ public class BuildingUpgradePanel : MonoBehaviour
     public Sprite CoinSprite => coinSprite;
 
     // Vzhľad na ladenie (referenčné rozlíšenie 1920x1080).
-    private static readonly Vector2 PanelSize = new Vector2(600f, 760f);
+    private static readonly Vector2 PanelSize = new Vector2(600f, 860f);
     private static readonly Color TextColor = new Color(0.35f, 0.2f, 0.08f);
     private static readonly Color WarningColor = new Color(0.75f, 0.15f, 0.1f);
 
@@ -39,6 +39,8 @@ public class BuildingUpgradePanel : MonoBehaviour
     private Button boostButton;
     private TMP_Text boostButtonText;
     private TMP_Text boostReasonText;
+    private Button staffButton;
+    private TMP_Text staffButtonText;
 
     private BuildingState building;
     private BuildingView selectedView;
@@ -113,6 +115,8 @@ public class BuildingUpgradePanel : MonoBehaviour
 
         // BRYN-112: personál budovy (obsluhovaná / bez obsluhy) ako tretí riadok.
         string staff = GameManager.Instance.CurrentState.IsStaffed(building) ? "Personál: obsluhovaná" : "Personál: bez obsluhy";
+        staffButton.interactable = building.isActive && GameManager.Instance.CanTransferStaff;
+        staffButtonText.text = GameManager.Instance.CanTransferStaff ? "Presunúť personál" : "Personál (pauza)";
 
         // Na maxime nie je cena ani minca, preto text tlačidla zaberie celú šírku (inak pôvodné ukotvenie 0.05 - 0.55).
         RectTransform buttonTextRect = (RectTransform)buttonText.transform;
@@ -240,6 +244,14 @@ public class BuildingUpgradePanel : MonoBehaviour
         };
     }
 
+    private void ShowStaff()
+    {
+        if (building == null || !GameManager.Instance.CanTransferStaff) return;
+        BuildingState selected = building;
+        Hide();
+        StaffAllocationPanel.Show(selected);
+    }
+
     // --- Vytvorenie UI v kóde ---
 
     private void BuildUi()
@@ -270,21 +282,21 @@ public class BuildingUpgradePanel : MonoBehaviour
 
         infoText = NewText(
             "Info", panel.transform, 34f, TextColor,
-            new Vector2(0.12f, 0.58f),
+            new Vector2(0.12f, 0.65f),
             new Vector2(0.88f, 0.82f)
         );
 
         reasonText = NewText(
             "Reason", panel.transform, 26f, WarningColor,
-            new Vector2(0.12f, 0.48f),
-            new Vector2(0.88f, 0.56f)
+            new Vector2(0.12f, 0.55f),
+            new Vector2(0.88f, 0.63f)
         );
 
         Image buttonImage = NewImage(
             "UpgradeButton", panel.transform, buttonSprite,
             new Color(0.3f, 0.7f, 0.2f),
-            new Vector2(0.18f, 0.33f),
-            new Vector2(0.82f, 0.46f)
+            new Vector2(0.18f, 0.43f),
+            new Vector2(0.82f, 0.54f)
         );
 
         upgradeButton = buttonImage.gameObject.AddComponent<Button>();
@@ -303,16 +315,16 @@ public class BuildingUpgradePanel : MonoBehaviour
         // BRYN-72: Feedback for the boost action.
         boostReasonText = NewText(
             "BoostReason", panel.transform, 24f, WarningColor,
-            new Vector2(0.10f, 0.23f),
-            new Vector2(0.90f, 0.31f)
+            new Vector2(0.10f, 0.34f),
+            new Vector2(0.90f, 0.41f)
         );
 
         // Second button, using the same sprite as Upgrade.
         Image boostImage = NewImage(
             "BoostButton", panel.transform, buttonSprite,
             new Color(0.2f, 0.6f, 0.85f),
-            new Vector2(0.18f, 0.08f),
-            new Vector2(0.82f, 0.21f)
+            new Vector2(0.18f, 0.22f),
+            new Vector2(0.82f, 0.33f)
         );
 
         boostButton = boostImage.gameObject.AddComponent<Button>();
@@ -325,6 +337,14 @@ public class BuildingUpgradePanel : MonoBehaviour
         );
 
         boostButtonText.fontStyle = FontStyles.Bold;
+
+        Image staffImage = NewImage("StaffButton", panel.transform, buttonSprite,
+            new Color(0.2f, 0.6f, 0.5f), new Vector2(0.18f, 0.07f), new Vector2(0.82f, 0.18f));
+        staffButton = staffImage.gameObject.AddComponent<Button>();
+        staffButton.targetGraphic = staffImage;
+        staffButton.onClick.AddListener(ShowStaff);
+        staffButtonText = NewText("Label", staffImage.transform, 32f, Color.white,
+            new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.95f));
 
 
         Vector2 topRight = Vector2.one;

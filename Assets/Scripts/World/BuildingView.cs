@@ -63,9 +63,19 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
 
     public bool IsBoostActive => isBoostActive;
 
-    // BRYN-72: Boost halves the effective service time.
-    public float ServiceSeconds =>
-        baseServiceSeconds * (isBoostActive ? 0.5f : 1f);
+    // Read staffing every frame so transfers affect services already in progress.
+    // BRYN-72: the existing boost still halves the effective service time.
+    public float ServiceSeconds
+    {
+        get
+        {
+            GameManager manager = GameManager.Instance;
+            bool staffed = manager != null && manager.CurrentState != null && manager.CurrentState.IsStaffed(state);
+            float emptyRate = manager != null && manager.Config != null ? manager.Config.unstaffedUtilization : 0.33f;
+            float utilization = staffed ? 1f : Mathf.Clamp(emptyRate, 0.01f, 1f);
+            return baseServiceSeconds * (isBoostActive ? 0.5f : 1f) / utilization;
+        }
+    }
 
     private Vector2 guestEntranceOffset;
     private Vector2 guestQueueStep;

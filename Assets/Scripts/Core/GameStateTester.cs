@@ -49,15 +49,17 @@ public class GameStateTester : MonoBehaviour
                     building.isActive = !building.isActive;
                 }
             }
+            GameManager.Instance.CurrentState.EnsureStaffing();
             Debug.Log("Toggled pool and bungalows.");
         }
 
-        // BRYN-22: testovanie obsluhy: W zvýši počet pracovníkov (po 5 sa vráti na 0).
+        // Test a legal transfer without breaking the prototype's worker deficit.
         if (Input.GetKeyDown(KeyCode.W))
         {
             var state = GameManager.Instance.CurrentState;
-            state.workerCount = (state.workerCount + 1) % 6;
-            Debug.Log($"Workers: {state.workerCount}");
+            var source = state.buildings.Find(b => state.IsStaffed(b));
+            var target = state.buildings.Find(b => b.isActive && !state.IsStaffed(b));
+            GameManager.Instance.TryTransferStaff(source, target);
         }
 
         // BRYN-26: dočasné testovanie odomykania: N pridá jednu dokončenú vlnu.

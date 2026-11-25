@@ -19,6 +19,7 @@ These controls work while the game is running in Unity Play mode, provided the `
 | E   | Remove 10 energy                                  |
 | S   | Save the current game state                       |
 | N   | Add one completed wave (temporary, BRYN-26)       |
+| W   | Transfer one worker to the empty unlocked building |
 | P   | Print the current game state in the Unity Console |
 
 Click inside the Game view before using the controls.
@@ -37,8 +38,8 @@ Click inside the Game view before using the controls.
 - A new game has two available workers, stored as `workerCount` (BRYN-12).
 - These defaults are created with each new `GameState`; separate games do not share building instances.
 - Loading an older save that only contains coins, energy and resort value adds the starting buildings and workers while retaining those resource values. The next save includes the new fields.
-- Saved building levels, active flags and worker counts are retained on later loads. Zero workers and an explicitly empty building list are not reset to the starting defaults.
-- As with the existing resource stories, this implementation is game-state data with Console inspection. Building placement, worker characters and task assignment are not implemented.
+- Saved building levels and active flags are retained. BRYN-35 normalizes the worker count to unlocked buildings minus one (minimum zero), including legacy saves with zero or excess workers.
+- Workers are anonymous assignments to buildings. Named worker characters are outside prototype scope.
 
 ## Top bar HUD (BRYN-14)
 
@@ -153,8 +154,17 @@ Click inside the Game view before using the controls.
 
 ## Current limitations
 
-- Workers are represented by a count; individual workers and assignments are not yet modeled.
-- Building upgrades and activation have saved state only; no upgrade or activation gameplay is included.
-- Service duration is configurable per building; level, worker and boost modifiers are separate work.
-- Full wave/guest save-and-resume is deferred by agreement. Saving behavior is unchanged: occupancy is persisted, but visits, queues and service progress are not. Reloading a save made during service can leave occupied places without guests; the follow-up must restore complete wave state, as required by the technical document, rather than silently reset progress.
+- Workers have one slot per unlocked building; named staff and multiple slots are outside prototype scope.
+- Service duration is configurable per building and responds to staffing and boosts. Levels increase capacity, not service speed.
+- Full wave/guest save-and-resume remains separate work. Persisting worker assignments does not resume an interrupted wave.
 - Save-file corruption handling and validation still need to be implemented.
+
+## Staff transfers (BRYN-33, BRYN-34, BRYN-35, BRYN-36, BRYN-39)
+
+- Tap an unlocked building, then **Presunúť personál**. For a staffed building, choose an empty destination; for an empty building, choose a staffed source. Locked buildings are excluded, occupied destinations are disabled, and successful transfers close the panel so the existing staff-change indicators are visible.
+- Transfers are immediate and free, before or during a wave. `GameManager.TryTransferStaff` checks application pause and `Time.timeScale` before changing anything. The controls are disabled while paused; no new pause screen is introduced.
+- `GameState.workerAssignments` stores building type IDs, one worker per assigned building. `IsStaffed` drives both the existing badges and service speed. No wave event resets assignments.
+- New games assign two workers to Restaurant and BeachBar, leaving Reception empty. Unlocking Pool or Bungalows adds its worker on that building and keeps the previous empty building empty. There are always two/three/four workers for three/four/five unlocked buildings.
+- `SaveSystem.Deserialize` repairs missing, duplicate, locked or excess assignments while preserving valid assignments, currencies, levels and wave progress. Legacy worker counts are reconciled with the prototype rule. Transfers use the existing save mechanism.
+- `GameConfig.unstaffedUtilization` defaults to `0.33`; staffed buildings run at `1.0`. `BuildingView.ServiceSeconds` combines this with the existing boost. `GuestManager` reads the effective duration every frame, so moving a worker changes ongoing service immediately without resetting progress.
+- `StaffAllocationPanel` builds uGUI/TMP controls using the sprites already assigned to `BuildingUpgradePanel`. No prefab, scene, input-system or package changes are needed.

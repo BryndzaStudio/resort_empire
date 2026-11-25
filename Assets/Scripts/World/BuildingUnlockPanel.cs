@@ -149,7 +149,7 @@ public class BuildingUnlockPanel : MonoBehaviour
         }
 
         GameManager.Instance.CurrentState.coins -= BuildingState.UnlockCost(building.type);
-        building.isActive = true;
+        GameManager.Instance.CurrentState.ActivateBuilding(building);
         GameManager.Instance.SaveGame();
         Hide();
     }
