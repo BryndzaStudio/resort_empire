@@ -9,6 +9,7 @@ using UnityEngine;
 // a to v tom istom frame, v ktorom ju BuildingView zistí (kontroluje ju každý frame).
 // Komponent si pridáva BuildingView sám, do scény ani do prefabu ho netreba dávať.
 // Nezáleží na tom, ako sa personál zmenil (presun personálu, nový pracovník, kláves W v teste).
+// BRYN-40: keď sa po odomknutí budovy objaví nový člen personálu, text je "Nový personál!".
 public class StaffChangeIndicator : MonoBehaviour
 {
     // BRYN-91: limit na zobrazenie zmeny.
@@ -64,7 +65,8 @@ public class StaffChangeIndicator : MonoBehaviour
     }
 
     // added = true: personál pribudol, false: ubudol. position = kde sa text objaví (vo svete).
-    public void Show(bool added, Vector3 position)
+    // label = vlastný text (napr. BRYN-40 "Nový personál!"); bez neho "+1 personál" / "-1 personál".
+    public void Show(bool added, Vector3 position, string label = null)
     {
         if (text == null)
         {
@@ -73,7 +75,7 @@ public class StaffChangeIndicator : MonoBehaviour
 
         float changedAt = Time.realtimeSinceStartup;
 
-        text.text = added ? "+1 personál" : "-1 personál";
+        text.text = label ?? (added ? "+1 personál" : "-1 personál");
         color = added ? AddedColor : RemovedColor;
         text.color = color;
         startPosition = position;

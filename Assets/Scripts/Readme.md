@@ -150,6 +150,7 @@ Click inside the Game view before using the controls.
 - Keď sa budove zmení obsluha (`GameState.IsStaffed`), nad odznakom s pracovníkom sa objaví zelené `+1 personál` (pribudol) alebo červené `-1 personál` (ubudol). Text je na tmavej podložke, vystúpi nahor a za 1 s zmizne.
 - `StaffChangeIndicator` si pridáva `BuildingView` sám (len ak má prefab priradený `Worker Badge Sprite`), prefab ani scéna sa nemenia. Pri prvom zobrazení budovy sa nič neukáže, len pri zmene.
 - Nezáleží na tom, čo personál zmenilo (presun personálu BRYN-33/34, nový pracovník, kláves `W` v `GameStateTester`). Stačí, aby to bolo vidieť v `GameState.IsStaffed`.
+- BRYN-40: nový člen personálu sa objaví v novej budove. Pri odomknutí budovy `GameState.ActivateBuilding` pridá pracovníka priamo do nej (ostatné priradenia sa nemenia). `BuildingView` zistí, že sa budova práve zmenila zo staveniska na hotovú a dostala pracovníka, a namiesto `+1 personál` ukáže `Nový personál!`.
 - BRYN-91: zmena sa zobrazí do 100 ms. Text je vytvorený vopred a len sa zapne v tom istom frame, v ktorom `BuildingView` zmenu zistí (kontroluje ju každý frame, takže najneskôr o 1 frame). Na konci frame sa do Console vypíše `BRYN-91: ... zobrazený za X ms`, nad 100 ms varovanie.
 
 ## Current limitations
