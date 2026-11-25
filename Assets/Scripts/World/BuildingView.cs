@@ -54,6 +54,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     private const float StaffChangeOffsetY = 1.3f;
     private StaffChangeIndicator staffChange;
 
+    // BRYN-40: budova sa práve odomkla (stavenisko -> hotová), jej pracovník je nový člen personálu.
+    private const string NewStaffLabel = "Nový personál!";
+    private bool justActivated;
+
     // Typ budovy, ktorú tento objekt zobrazuje.
     public BuildingType Type { get; private set; }
     public BuildingState State => state;
@@ -252,6 +256,10 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     // BRYN-22: Odznak s pracovníkom je farebný, ak je budova obsluhovaná, inak tmavý.
     private void UpdateStaffedLook()
     {
+        // BRYN-40: príznak platí len v tom frame, keď sa budova odomkla.
+        bool activatedNow = justActivated;
+        justActivated = false;
+
         GameManager manager = GameManager.Instance;
         if (workerBadge == null || manager == null || manager.CurrentState == null)
         {
@@ -270,9 +278,11 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
         workerBadge.color = staffed ? Color.white : NoWorkerColor;
 
         // BRYN-37/91: pri zmene (nie pri prvom zobrazení) ukážeme, či personál pribudol alebo ubudol.
+        // BRYN-40: ak sa budova práve odomkla a dostala pracovníka, je to nový člen personálu.
         if (previous != -1 && staffChange != null)
         {
-            staffChange.Show(staffed, workerBadge.transform.position + Vector3.up * StaffChangeOffsetY);
+            string label = staffed && activatedNow ? NewStaffLabel : null;
+            staffChange.Show(staffed, workerBadge.transform.position + Vector3.up * StaffChangeOffsetY, label);
         }
     }
 
@@ -281,6 +291,8 @@ public class BuildingView : MonoBehaviour, IPointerClickHandler
     private void ShowVisual()
     {
         bool active = state.isActive;
+        // BRYN-40: zmena zo staveniska na hotovú budovu počas hry (nie prvé zobrazenie).
+        justActivated = active && shownActive == 0;
         shownActive = active ? 1 : 0;
         shownLevel = state.level;
 
